@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
+import runsRoutes from './routes/runs.routes.js';
+import internalRoutes from './routes/internal.routes.js';
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/runs', runsRoutes);
+app.use('/api/internal', internalRoutes);
 
 // Centralized error handler
 app.use((err, req, res, next) => {
