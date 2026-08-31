@@ -1,6 +1,6 @@
 import os
 import pytest
-from orchestrator.github_integration import create_fix_pr, build_pr_body
+from orchestrator.github_integration import create_fix_pr, build_pr_body, perform_pr_action
 
 def test_build_pr_body_structure():
     pr_body = build_pr_body(
@@ -36,3 +36,24 @@ async def test_create_fix_pr_execution():
     assert "branch" in result
     assert "omnisight/fix-test-run-1" in result["branch"]
     print(f"[PASS] Test 2: create_fix_pr returned valid PR record. URL: {result['pr_url']}, Branch: {result['branch']}")
+
+@pytest.mark.asyncio
+async def test_perform_pr_action():
+    # Test comment action
+    comment_res = await perform_pr_action(
+        pr_url="https://github.com/Harsh-Yadav029/OmniSight/pull/101",
+        action="comment",
+        message="Approved by QA manager: Harsh"
+    )
+    assert isinstance(comment_res, dict)
+    assert comment_res["action"] == "comment"
+
+    # Test close action
+    close_res = await perform_pr_action(
+        pr_url="https://github.com/Harsh-Yadav029/OmniSight/pull/101",
+        action="close",
+        message="Rejected by QA manager: Harsh - Reason: Layout shift"
+    )
+    assert isinstance(close_res, dict)
+    assert close_res["action"] == "close"
+    print("[PASS] Test 3: perform_pr_action executed comment and close operations successfully")

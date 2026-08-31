@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 export const SubmitButton = ({ disabled = false, loading = false, onClick }) => {
   // CRITICAL: Clean, baseline responsive styling for SubmitButton.
   // This className string is the primary target for visual bug injection & self-healing in later phases.
-  const buttonClassName = "line-clamp-none";
+  const buttonClassName = "";
 
   return (
     <button

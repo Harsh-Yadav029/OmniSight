@@ -1,3 +1,4 @@
+import os
 import pytest
 from httpx import AsyncClient, ASGITransport
 from main import app
@@ -32,3 +33,31 @@ async def test_webhook_intake_and_payload_validation():
         assert "run_id" in data
         assert len(data["run_id"]) > 0
         print(f"[PASS] Test 3: Webhook accepted build event and generated run_id: {data['run_id']}")
+
+@pytest.mark.asyncio
+async def test_pr_action_endpoint():
+    transport = ASGITransport(app=app)
+    internal_key = os.getenv("INTERNAL_API_KEY", "default_internal_key")
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Test 4: Missing internal key returns 401
+        res_no_key = await client.post(
+            "/internal/pr-action",
+            json={"pr_url": "https://github.com/test/repo/pull/1", "action": "comment", "message": "test"}
+        )
+        assert res_no_key.status_code == 401
+        print("[PASS] Test 4: /internal/pr-action rejects unauthenticated request without X-Internal-Key")
+
+        # Test 5: Valid internal key executes action
+        res_action = await client.post(
+            "/internal/pr-action",
+            headers={"X-Internal-Key": internal_key},
+            json={
+                "pr_url": "https://github.com/Harsh-Yadav029/OmniSight/pull/101",
+                "action": "comment",
+                "message": "Approved by QA manager: Test User"
+            }
+        )
+        assert res_action.status_code == 200
+        data = res_action.json()
+        assert data["success"] is True
+        print("[PASS] Test 5: /internal/pr-action successfully executed comment action")

@@ -1,7 +1,7 @@
 import os
 import asyncio
 from typing import Optional
-from fastapi import FastAPI, BackgroundTasks, HTTPException, status
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 import httpx
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from navigator.navigate_checkout import run_navigation
 from orchestrator.graph import run_self_healing_loop
 from vlm_engine.groq_helper import summarize_for_pr
-from orchestrator.github_integration import create_fix_pr
+from orchestrator.github_integration import create_fix_pr, perform_pr_action
 
 load_dotenv()
 
@@ -43,6 +43,11 @@ class BuildEventPayload(BaseModel):
 class BuildEventResponse(BaseModel):
     status: str
     run_id: str
+    message: str
+
+class PRActionPayload(BaseModel):
+    pr_url: str
+    action: str  # 'close' | 'comment'
     message: str
 
 async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, internal_key: str):
@@ -193,3 +198,38 @@ async def handle_build_event(payload: BuildEventPayload, background_tasks: Backg
         run_id=str(run_id),
         message="Build run created and autonomous self-healing pipeline triggered in background"
     )
+
+@app.post("/internal/pr-action", status_code=status.HTTP_200_OK)
+async def handle_pr_action(
+    payload: PRActionPayload,
+    x_internal_key: Optional[str] = Header(None, alias="X-Internal-Key")
+):
+    """
+    Internal API endpoint for performing PR actions (comment or close)
+    triggered by QA review decisions in the dashboard.
+    """
+    expected_key = os.getenv("INTERNAL_API_KEY") or "default_internal_key"
+    if x_internal_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing X-Internal-Key header"
+        )
+
+    if payload.action not in ["close", "comment"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Action must be either 'close' or 'comment'"
+        )
+
+    result = await perform_pr_action(
+        pr_url=payload.pr_url,
+        action=payload.action,
+        message=payload.message
+    )
+    return {
+        "success": True,
+        "data": result,
+        "githubSynced": result.get("githubSynced", True),
+        "warning": result.get("warning"),
+        "message": f"PR action '{payload.action}' processed"
+    }

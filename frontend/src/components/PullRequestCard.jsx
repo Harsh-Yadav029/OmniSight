@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { GitPullRequest, ExternalLink, Check, X, ShieldAlert, Sparkles } from 'lucide-react';
+import { GitPullRequest, ExternalLink, Check, X, AlertTriangle, MessageSquare } from 'lucide-react';
 
 export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
   const [loading, setLoading] = useState(false);
-  const [decisionFeedback, setDecisionFeedback] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [warningMessage, setWarningMessage] = useState(null);
 
   if (!pullRequest) {
     return (
@@ -17,10 +19,15 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
 
   const currentDecision = pullRequest.decision || 'pending';
 
-  const handleAction = async (decision) => {
+  const handleAction = async (decision, reason = '') => {
     setLoading(true);
+    setWarningMessage(null);
     try {
-      await onDecision(decision, decisionFeedback);
+      const res = await onDecision(decision, reason);
+      if (res?.data?.warning || res?.warning) {
+        setWarningMessage(res?.data?.warning || res?.warning);
+      }
+      setShowRejectModal(false);
     } catch (err) {
       console.error('Failed to update PR decision:', err);
     } finally {
@@ -46,7 +53,7 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
         {currentDecision === 'rejected' && (
           <span className="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-xs font-bold flex items-center gap-1.5">
             <X className="w-3.5 h-3.5" />
-            Rejected by QA
+            Rejected by QA (PR Closed)
           </span>
         )}
         {currentDecision === 'pending' && (
@@ -79,8 +86,16 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
         </div>
       </div>
 
+      {/* Non-blocking Notice Banner */}
+      {warningMessage && (
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2 text-xs text-amber-300">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>Notice: {warningMessage}</span>
+        </div>
+      )}
+
       {/* Action Buttons for QA Manager */}
-      {currentDecision === 'pending' && (
+      {currentDecision === 'pending' && !showRejectModal && (
         <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-3">
           <button
             disabled={loading}
@@ -88,17 +103,50 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
             className="w-full sm:w-1/2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />
-            <span>Approve & Merge Fix</span>
+            <span>Approve Fix</span>
           </button>
 
           <button
             disabled={loading}
-            onClick={() => handleAction('rejected')}
+            onClick={() => setShowRejectModal(true)}
             className="w-full sm:w-1/2 py-2.5 px-4 bg-rose-600/10 hover:bg-rose-600/20 active:bg-rose-600/30 disabled:opacity-50 text-rose-400 border border-rose-500/30 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2"
           >
             <X className="w-4 h-4" />
             <span>Reject Fix</span>
           </button>
+        </div>
+      )}
+
+      {/* Reject Reason Form */}
+      {showRejectModal && (
+        <div className="pt-2 border-t border-slate-800/80 space-y-3">
+          <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-rose-400" />
+            <span>Rejection Reason (Optional comment for GitHub PR):</span>
+          </label>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="e.g. Unwanted layout shift on tablet viewport..."
+            rows={2}
+            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition resize-none"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              disabled={loading}
+              onClick={() => handleAction('rejected', rejectReason)}
+              className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold text-xs rounded-xl transition"
+            >
+              {loading ? 'Closing PR...' : 'Confirm Rejection & Close PR'}
+            </button>
+            <button
+              disabled={loading}
+              onClick={() => setShowRejectModal(false)}
+              className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
