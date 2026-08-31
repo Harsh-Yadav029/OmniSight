@@ -1,166 +1,151 @@
-# OmniSight 👁️✨
+# 👁️ OmniSight — Autonomous Visual QA & Self-Healing Engine
 
-> **Autonomous Multimodal Visual Regression Testing & Self-Healing Engine**  
-> Powered by **Gemini 2.5 Flash**, **Groq LLaMA 3.1**, **Playwright**, and **LangGraph**.
+> **Never let a broken responsive layout or invisible submit button slip into production again.**  
+> OmniSight continuously crawls web apps across mobile, tablet, and desktop viewports, spots visual discrepancies using **Gemini 2.5 Flash**, writes clean Tailwind CSS fixes via a self-healing **LangGraph** loop, summarizes changes with **Groq (LLaMA 3.1)**, and automatically submits ready-to-merge **GitHub Pull Requests**.
 
 ---
 
-## 🚀 Overview
+## 🌟 What makes OmniSight special?
 
-**OmniSight** is an AI-native quality assurance platform that automates the detection, root-cause diagnosis, code patching, and GitHub Pull Request creation for visual frontend regressions across responsive viewports (**Mobile 375px**, **Tablet 768px**, **Desktop 1440px**).
+Traditional end-to-end tests only check whether an element exists in the DOM tree. If a CSS bug causes a critical "Place Order" button to be pushed 200px below the mobile screen or hidden behind an opaque overlay, traditional test runners like Jest or Cypress still report `PASS`.
 
-```mermaid
-flowchart LR
-    CI[CI/CD Webhook / Commit] --> ML[FastAPI Webhook Gateway]
-    ML --> NAV[Playwright Multi-Viewport Navigator]
-    NAV --> VLM[Gemini 2.5 Flash Vision Audit]
-    VLM --> EXTRACT[Fix Extraction Engine]
-    EXTRACT --> GRAPH[LangGraph Self-Healing Loop]
-    GRAPH --> GROQ[Groq LLaMA 3.1 Summarizer]
-    GROQ --> GH[Automated GitHub PR]
-    GH --> DASH[QA Review Dashboard]
+**OmniSight solves this with true multimodal vision:**
+1. 📸 **Crawls like a human**: Navigates multi-step user journeys across **Mobile (375px)**, **Tablet (768px)**, and **Desktop (1440px)**.
+2. 🧠 **Audits with Gemini Vision**: Analyzes pixel screenshots together with trimmed DOM HTML to identify visual defects (cut-off text, overlapping components, broken responsive grids).
+3. 🔄 **Self-Heals with LangGraph**: Autonomously inspects your source code, generates surgical Tailwind CSS patches, re-tests the live app, and iterates until the UI is verified pixel-perfect.
+4. 🚀 **Opens GitHub PRs**: Uses Groq LLaMA 3.1 to generate clean, professional PR descriptions with visual side-by-side evidence and opens a Pull Request.
+5. 📊 **Interactive QA Dashboard**: Gives your QA team a dark-mode review portal with viewport switchers, side-by-side diff viewers, and 1-click **Approve & Merge** buttons.
+
+---
+
+## 🏗️ Architecture & Services
+
+```
+OmniSight/
+├── backend/            # Express + Mongoose API (Port 5000)
+│                       # Manages JWT auth, build run statuses, and QA approval decisions.
+│
+├── ml-service/         # FastAPI + Playwright + LangGraph Engine (Port 8000)
+│                       # Multi-viewport navigation, Gemini Vision audit, self-healing loop & PR engine.
+│
+├── frontend/           # QA Review Dashboard in React + Tailwind + Radix (Port 5174)
+│                       # Live polling dashboard with side-by-side screenshot diffs.
+│
+├── test-target-app/    # "TinyCart" Mock E-Commerce Store (Port 5173)
+│                       # Sample application under test with catalog, cart, and checkout.
+│
+└── scripts/            # End-to-end automated smoke testing suite.
 ```
 
 ---
 
-## 🏗️ Monorepo Services
+## 🔑 What to put in your `.env` files
 
-| Service | Technology Stack | Port | Description |
-| :--- | :--- | :--- | :--- |
-| **`backend/`** | Node.js, Express, Mongoose, JWT | `5000` | Core API for auth, build runs, fix attempts, and PR decision management |
-| **`ml-service/`** | Python 3.11, FastAPI, Playwright, LangGraph, Google GenAI, Groq | `8000` | Autonomous visual auditor, VLM analysis engine, and self-healing loop |
-| **`frontend/`** | React 18, Vite, Tailwind CSS, Radix UI, TanStack Query | `5174` | QA review dashboard with side-by-side screenshot diffs and PR controls |
-| **`test-target-app/`** | React 18, Vite, Tailwind CSS ("TinyCart") | `5173` | E-commerce application under test |
-| **`scripts/`** | Python, Shell | — | Automation utilities and end-to-end smoke test runners |
+You can copy `.env.example` in the root (or in each subfolder) to `.env`. Here is what each key does:
 
----
+| Environment Variable | Where to get it | What it's used for |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) | Powers multimodal vision inspection (`gemini-2.5-flash`) |
+| `GROQ_API_KEY` | [Groq Cloud Console](https://console.groq.com/keys) | Powers ultra-fast PR summarization (`llama-3.1-8b-instant`) |
+| `GITHUB_TOKEN` | [GitHub Settings ➔ Personal Access Tokens](https://github.com/settings/tokens) | Creates fix branches and opens automated Pull Requests |
+| `GITHUB_REPO` | Your repository (e.g. `your-username/OmniSight`) | Target repository where Pull Requests will be opened |
+| `JWT_SECRET` | Any random 32+ character string | Signs secure login tokens for QA managers and viewers |
+| `INTERNAL_API_KEY` | Any random 32+ character string | Authenticates internal communication between FastAPI & Express |
+| `MONGO_URI` | `mongodb://localhost:27017/omnisight` (or Atlas URI) | Database storing build runs, fix cycles, and user accounts |
+| `REDIS_URL` | `redis://localhost:6379/0` | Cache and message broker for background job queues |
 
-## 🛠️ Prerequisites
-
-- **Node.js** v20+ & **npm**
-- **Python** 3.11+
-- **Docker Desktop** (optional for multi-container orchestration)
-- **API Keys**:
-  - Google Gemini API Key (`aistudio.google.com/apikey`)
-  - Groq API Key (`console.groq.com`)
-  - GitHub Fine-grained PAT (scoped to repository contents & pull requests)
-  - MongoDB Atlas Connection String (or local MongoDB)
+> 💡 **Offline Mode Supported:** If you run tests without API keys configured, OmniSight automatically enables deterministic offline fallbacks so you can test all flows without getting blocked.
 
 ---
 
-## ⚙️ Environment Configuration
+## 🚀 Quick Start Guide
 
-Copy `.env.example` to `.env` in each service directory and populate your credentials:
+### Option 1: One-Click Docker Compose (Recommended)
 
-### 1. `backend/.env`
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/omnisight
-JWT_SECRET=your_jwt_secret_64_bytes
-INTERNAL_API_KEY=your_internal_api_key_32_bytes
-```
-
-### 2. `ml-service/.env`
-```env
-GEMINI_API_KEY=your_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
-GITHUB_TOKEN=your_github_pat_token
-GITHUB_REPO=your_username/tinycart
-INTERNAL_API_KEY=your_internal_api_key_32_bytes
-REDIS_URL=redis://localhost:6379/0
-BACKEND_URL=http://localhost:5000
-TEST_TARGET_APP_URL=http://localhost:5173
-```
-
-### 3. `frontend/.env`
-```env
-VITE_BACKEND_URL=http://localhost:5000
-```
-
-### 4. `test-target-app/.env`
-```env
-VITE_PORT=5173
-```
-
----
-
-## 🏃 Running Locally
-
-### Option A: Running Full Stack with Docker Compose
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Harsh-Yadav029/OmniSight.git
+cd OmniSight
+
+# 2. Configure environment
+cp .env.example .env
+
+# 3. Launch all services
 docker-compose up --build
 ```
 
-### Option B: Running Individual Services
+- **QA Review Dashboard**: [http://localhost:5174](http://localhost:5174)
+- **TinyCart Store Under Test**: [http://localhost:5173](http://localhost:5173)
+- **Express Backend API**: [http://localhost:5000](http://localhost:5000)
+- **FastAPI ML Gateway**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-#### 1. Backend (`backend/`)
+---
+
+### Option 2: Running Locally (Manual Terminals)
+
+#### 1. Backend (Terminal 1)
 ```bash
 cd backend
 npm install
 npm run dev
-# Health check: http://localhost:5000/health
 ```
 
-#### 2. ML Service (`ml-service/`)
+#### 2. ML & Vision Service (Terminal 2)
 ```bash
 cd ml-service
 pip install -r requirements.txt
 playwright install chromium
 uvicorn main:app --reload --port 8000
-# Health check: http://localhost:8000/health
 ```
 
-#### 3. Test Target App (`test-target-app/`)
+#### 3. Test Target App — TinyCart (Terminal 3)
 ```bash
 cd test-target-app
 npm install
 npm run dev
-# App URL: http://localhost:5173
 ```
 
-#### 4. QA Dashboard (`frontend/`)
+#### 4. QA Dashboard (Terminal 4)
 ```bash
 cd frontend
 npm install
 npm run dev
-# Dashboard URL: http://localhost:5174
 ```
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Testing & Validation
 
-Run automated test suites for each service:
+### Run Full End-to-End Smoke Test
+To test the entire autonomous pipeline (defect injection ➔ VLM detection ➔ LangGraph healing ➔ PR generation):
 
 ```bash
-# Backend Test Suite (Auth + Build Runs + Internal API)
+python scripts/smoke_test.py
+```
+
+### Run Service Unit & Integration Tests
+```bash
+# Test Node backend (Auth + Runs Models + Internal API)
 cd backend && npm test
 
-# ML Service Test Suite (VLM Analyzer + Groq Helper + Webhook + Fix Extractor)
+# Test Python ML service (18 unit & integration test suites)
 cd ml-service && pytest tests/ -v
 ```
 
 ---
 
-## 📋 Implementation Roadmap
+## 👤 Default QA Login Credentials
 
-- [x] **Phase 0: Monorepo Scaffolding & TinyCart UI**
-  - [x] Monorepo structure, Docker Compose, environment configs
-  - [x] Complete "TinyCart" e-commerce application UI with Tailwind & React Router
-- [x] **Phase 1: Authentication, Playwright Navigation & Webhook Gateway**
-  - [x] Node/Express JWT authentication and role-based access control (`qa_manager`)
-  - [x] Mongoose models for `BuildRun`, `FixAttempt`, `PullRequestRecord`
-  - [x] Multi-viewport Playwright checkout navigator (375px, 768px, 1440px)
-  - [x] FastAPI webhook intake gateway & async background task dispatcher
-- [x] **Phase 2: Multimodal Prompting, Groq Summarizer & Fix Extraction**
-  - [x] Gemini 2.5 Flash multimodal vision analysis engine (`analyze.py`)
-  - [x] Groq LLaMA 3.1 PR summarizer & commit message generator (`groq_helper.py`)
-  - [x] CodeFix extraction & Tailwind normalization engine (`extract_fix.py`)
-  - [x] Mid-Project Review Vision Audit test suite
-- [ ] **Phase 3: LangGraph Self-Healing Loop & GitHub PR Automation**
-  - [ ] LangGraph state graph autonomous loop (`graph.py`)
-  - [ ] Automated GitHub fix branch & PR creation (`github_integration.py`)
-- [ ] **Phase 4: Image Crop Optimization, QA Dashboard & Deployment**
-  - [ ] Region cropping token optimization (`crop_utils.py`)
-  - [ ] Interactive React QA review dashboard with side-by-side diffs
-  - [ ] Full stack Docker containerization & CI/CD action triggers
+When opening the QA Review Dashboard at [http://localhost:5174](http://localhost:5174), you can sign in with:
+
+- **QA Manager** (Full approval & merge access):
+  - Email: `qa_manager@omnisight.dev`
+  - Password: `password123`
+- **Viewer** (Read-only access):
+  - Email: `viewer@omnisight.dev`
+  - Password: `password123`
+
+---
+
+## 📄 License
+MIT License. Created with ❤️ for developers and QA engineers who care about pixel-perfect frontend experiences.
