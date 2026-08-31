@@ -31,7 +31,7 @@ Audit checklist:
 5. Illegible contrast or invisible interactive components.
 
 If there are NO visual issues, set has_issue to false and confidence to 1.0.
-If there IS a visual issue, identify the exact affected element selector from the DOM, explain the visual discrepancy clearly, and suggest precise Tailwind CSS classes to fix the issue.
+If there IS a visual issue, identify the exact affected element selector from the DOM, explain the visual discrepancy clearly, suggest precise Tailwind CSS classes, and optionally estimate the bounding_box {x, y, width, height} of the defect region.
 
 You must respond ONLY with valid JSON matching this schema:
 {
@@ -41,27 +41,34 @@ You must respond ONLY with valid JSON matching this schema:
   "affected_selector": string,
   "suggested_tailwind_classes": string,
   "suggested_css": string,
-  "confidence": float
+  "confidence": float,
+  "bounding_box": {"x": int, "y": int, "width": int, "height": int} or null
 }
 """
 
 def extract_json_from_text(text: str) -> dict:
     """Extracts JSON from model output, stripping any markdown code fences if present."""
     text = text.strip()
-    # Remove markdown code fences if present
     match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
     if match:
         text = match.group(1).strip()
     return json.loads(text)
 
-async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 3) -> dict:
+async def analyze_screenshot(
+    image_path: str,
+    dom_html: str,
+    max_retries: int = 3,
+    crop_box: Optional[Dict[str, Any]] = None
+) -> dict:
     """
     Calls Google Gemini API (model 'gemini-2.5-flash') to inspect screenshot for visual bugs.
+    Optionally crops screenshot around crop_box for token optimization.
     
     Args:
         image_path: Path to screenshot image file (.png)
         dom_html: Trimmed DOM HTML string of the audited page
         max_retries: Maximum rate-limit retry attempts
+        crop_box: Optional bounding box {x, y, width, height} to crop region prior to analysis
 
     Returns:
         Structured dict matching VLMResponse schema
@@ -69,7 +76,6 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("[VLM Engine] Warning: GEMINI_API_KEY not found in environment. Using mock/baseline analyzer.")
-        # Fallback offline analyzer for local development without active API key
         return VLMResponse(
             has_issue=False,
             issue_type="",
@@ -77,12 +83,22 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
             confidence=1.0
         ).model_dump()
 
-    # Load and validate image with PIL
+    # Load and validate image
     img_file = Path(image_path)
     if not img_file.exists():
         raise FileNotFoundError(f"Screenshot not found at path: {image_path}")
 
-    pil_img = Image.open(str(img_file))
+    # If crop_box is provided, crop region to optimize input tokens
+    actual_image_path = str(img_file)
+    if crop_box:
+        try:
+            from vlm_engine.crop_utils import crop_region
+            actual_image_path = crop_region(str(img_file), crop_box)
+            print(f"[VLM Engine] Token optimization: using cropped image at '{actual_image_path}'")
+        except Exception as crop_err:
+            print(f"[VLM Engine] Notice: Could not crop image ({crop_err}). Using full image.")
+
+    pil_img = Image.open(actual_image_path)
 
     # Initialize Google GenAI client
     from google import genai
@@ -96,7 +112,6 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
     last_error = None
     for attempt in range(1, max_retries + 1):
         try:
-            # Generate content using Google GenAI SDK (in thread pool to remain non-blocking async)
             response = await asyncio.to_thread(
                 client.models.generate_content,
                 model=model_name,
@@ -111,7 +126,6 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
             try:
                 parsed_json = extract_json_from_text(raw_text)
             except Exception:
-                # Retry once asking strictly for valid JSON without fences
                 retry_response = await asyncio.to_thread(
                     client.models.generate_content,
                     model=model_name,
@@ -132,7 +146,6 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
                 print(f"[VLM Engine] Rate limit encountered on attempt {attempt}. Retrying in {backoff_seconds}s...")
                 await asyncio.sleep(backoff_seconds)
             elif "model" in error_str and ("not found" in error_str or "supported" in error_str) and model_name == "gemini-2.5-flash":
-                # Fallback to gemini-1.5-flash if 2.5-flash is not available in region/tier
                 print("[VLM Engine] Falling back to model 'gemini-1.5-flash'...")
                 model_name = "gemini-1.5-flash"
             else:
@@ -141,7 +154,6 @@ async def analyze_screenshot(image_path: str, dom_html: str, max_retries: int = 
                 await asyncio.sleep(1)
 
     print(f"[VLM Engine] Vision analysis call failed after {max_retries} attempts: {last_error}")
-    # Return structured fallback response rather than crashing the pipeline
     return VLMResponse(
         has_issue=False,
         issue_type="api_error",
