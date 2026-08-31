@@ -1,0 +1,58 @@
+name: OmniSight Visual QA Trigger
+
+# ==============================================================================
+# OmniSight Autonomous Visual Regression Webhook Trigger
+#
+# SETUP INSTRUCTIONS:
+# 1. Go to your repository on GitHub: Settings -> Secrets and variables -> Actions
+# 2. Click "New repository secret" and name it: OMNISIGHT_WEBHOOK_URL
+# 3. Value:
+#    - For Local Development: Use an ngrok tunnel URL pointing to ml-service port 8000
+#      (e.g., https://abc1234.ngrok-free.app)
+#    - For Production / Deployed Service: Use your deployed ML service base URL
+#      (e.g., https://ml.omnisight.yourdomain.com)
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  trigger-visual-qa:
+    name: Dispatch OmniSight Visual Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger OmniSight Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.OMNISIGHT_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "⚠️ WARNING: OMNISIGHT_WEBHOOK_URL repository secret is not set."
+            echo "Please configure OMNISIGHT_WEBHOOK_URL in GitHub Secrets to enable automated visual QA."
+            exit 0
+          fi
+
+          echo "🚀 Dispatching build event to OmniSight at $WEBHOOK_URL/webhook/build-event..."
+
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$WEBHOOK_URL/webhook/build-event" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "repo": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "commit_sha": "${{ github.sha }}"
+            }')
+
+          BODY=$(echo "$RESPONSE" | sed -e '$d')
+          STATUS=$(echo "$RESPONSE" | tail -n1 | cut -d':' -f2)
+
+          echo "OmniSight Response (HTTP $STATUS):"
+          echo "$BODY"
+
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ OmniSight visual QA pipeline triggered successfully!"
+          else
+            echo "❌ Failed to trigger OmniSight visual QA pipeline (HTTP $STATUS)."
+            exit 1
+          fi

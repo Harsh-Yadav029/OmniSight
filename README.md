@@ -39,6 +39,51 @@ OmniSight/
 
 ---
 
+## 🔄 CI/CD Integration & GitHub Actions
+
+You can trigger OmniSight automatically on every commit or pull request using GitHub Actions.
+
+A ready-to-use workflow is included at [`test-target-app/.github/workflows/omnisight-trigger.yml`](test-target-app/.github/workflows/omnisight-trigger.yml):
+
+```yaml
+name: OmniSight Visual QA Trigger
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  trigger-visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger OmniSight Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.OMNISIGHT_WEBHOOK_URL }}
+        run: |
+          curl -X POST "$WEBHOOK_URL/webhook/build-event" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "repo": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "commit_sha": "${{ github.sha }}"
+            }'
+```
+
+### How to configure the webhook secret:
+1. Navigate to your repository on GitHub: **Settings ➔ Secrets and variables ➔ Actions**.
+2. Click **New repository secret**.
+3. Set the name to: `OMNISIGHT_WEBHOOK_URL`.
+4. Set the value:
+   - **For Local Development**: Use an [ngrok](https://ngrok.com/) tunnel URL pointing to `ml-service` port 8000:
+     ```bash
+     ngrok http 8000
+     # Set secret value to: https://abc1234.ngrok-free.app
+     ```
+   - **For Production / Deployed Setup**: Use your deployed `ml-service` base URL (e.g. `https://ml.omnisight.yourdomain.com`).
+
+---
+
 ## 🔑 What to put in your `.env` files
 
 You can copy `.env.example` in the root (or in each subfolder) to `.env`. Here is what each key does:
@@ -128,7 +173,7 @@ python scripts/smoke_test.py
 # Test Node backend (Auth + Runs Models + Internal API)
 cd backend && npm test
 
-# Test Python ML service (18 unit & integration test suites)
+# Test Python ML service (20 unit & integration test suites)
 cd ml-service && pytest tests/ -v
 ```
 
