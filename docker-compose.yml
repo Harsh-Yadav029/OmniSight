@@ -27,7 +27,9 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb://mongo:27017/omnisight
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/omnisight}
+      - JWT_SECRET=${JWT_SECRET:-omnisight_jwt_super_secret_key_development_only_12345}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-default_internal_key}
     depends_on:
       - mongo
 
@@ -40,9 +42,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - BACKEND_URL=http://backend:5000
-      - TEST_TARGET_APP_URL=http://test-target-app:5173
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO:-Harsh-Yadav029/OmniSight}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-default_internal_key}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - BACKEND_URL=${BACKEND_URL:-http://backend:5000}
+      - TEST_TARGET_APP_URL=${TEST_TARGET_APP_URL:-http://test-target-app:5173}
     depends_on:
       - redis
       - backend
@@ -64,6 +71,8 @@ services:
     restart: unless-stopped
     ports:
       - "5174:5174"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:5000
     depends_on:
       - backend
 
