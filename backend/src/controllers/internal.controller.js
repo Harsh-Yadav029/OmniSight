@@ -65,8 +65,8 @@ export const updateInternalRun = asyncHandler(async (req, res) => {
       { buildRunId: id },
       {
         buildRunId: id,
-        prUrl: pullRequest.prUrl,
-        branchName: pullRequest.branchName,
+        prUrl: pullRequest.prUrl || pullRequest.pr_url,
+        branchName: pullRequest.branchName || pullRequest.branch,
         decision: pullRequest.decision || 'pending',
       },
       { upsert: true, new: true }
@@ -83,5 +83,40 @@ export const updateInternalRun = asyncHandler(async (req, res) => {
       },
       'BuildRun updated successfully'
     )
+  );
+});
+
+export const createPullRequestRecord = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { prUrl, pr_url, branch, branchName, title, body } = req.body;
+
+  const finalPrUrl = prUrl || pr_url;
+  const finalBranch = branch || branchName;
+
+  if (!finalPrUrl) {
+    throw new ApiError(400, 'prUrl is required');
+  }
+
+  const run = await BuildRun.findById(id);
+  if (!run) {
+    throw new ApiError(404, `BuildRun with id ${id} not found`);
+  }
+
+  const prRecord = await PullRequestRecord.findOneAndUpdate(
+    { buildRunId: id },
+    {
+      buildRunId: id,
+      prUrl: finalPrUrl,
+      branchName: finalBranch || `omnisight/fix-${id}`,
+      decision: 'pending',
+    },
+    { upsert: true, new: true }
+  );
+
+  run.status = 'pr_created';
+  await run.save();
+
+  return res.status(201).json(
+    new ApiResponse(201, { pullRequest: prRecord, run }, 'Pull Request record saved successfully')
   );
 });
