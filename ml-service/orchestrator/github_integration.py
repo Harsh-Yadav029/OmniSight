@@ -107,9 +107,10 @@ async def create_fix_pr(run_id: str, fix_details: Dict[str, Any]) -> Dict[str, A
 
     # Execute GitHub API operations in a thread pool to avoid blocking async event loop
     def _sync_github_operations():
-        from github import Github, GithubException
+        from github import Github, Auth, GithubException
 
-        gh = Github(token)
+        auth = Auth.Token(token)
+        gh = Github(auth=auth)
         repo = gh.get_repo(repo_slug)
 
         # 1. Determine base branch SHA (default: main)
