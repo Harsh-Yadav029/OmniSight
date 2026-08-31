@@ -1,14 +1,24 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.routes.js';
 import runsRoutes from './routes/runs.routes.js';
 import internalRoutes from './routes/internal.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const runsPath = path.resolve(__dirname, '../../ml-service/runs');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
+
+// Serve runs and screenshot artifacts statically
+app.use('/runs', express.static(runsPath));
+app.use('/screenshots', express.static(runsPath));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
