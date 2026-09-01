@@ -7,7 +7,7 @@ export const Navbar = () => {
   const { totalItems } = useCart();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-40 w-full opacity-0 backdrop-blur border-b border-slate-200 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link
           to="/"
