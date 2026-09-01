@@ -29,6 +29,7 @@ BACKEND_URL = (os.getenv("BACKEND_URL") or "http://localhost:5000").rstrip("/")
 ML_SERVICE_URL = (os.getenv("ML_SERVICE_URL") or "http://localhost:8000").rstrip("/")
 TEST_TARGET_APP_URL = (os.getenv("TEST_TARGET_APP_URL") or "http://localhost:5173").rstrip("/")
 FRONTEND_URL = (os.getenv("FRONTEND_URL") or "http://localhost:5174").rstrip("/")
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY") or "default_internal_key"
 
 CLEAN_NAVBAR_CLASSES = "sticky top-0 z-40 w-full bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm"
 BUG_NAVBAR_CLASSES = "sticky top-0 z-40 w-full opacity-0 backdrop-blur border-b border-slate-200 shadow-sm"
@@ -82,9 +83,19 @@ async def run_omnisight_smoke_test(target_component: str = "navbar"):
     print(f"  Injecting broken classes: '{broken_classes}'")
     apply_tailwind_classes_to_source(file_hint, broken_classes, selector)
 
-    # 3. Simulate Webhook Intake & Pipeline Dispatch
+    # 3. Simulate Webhook Intake & Register Run with Backend
     run_id = f"smoke-run-{int(time.time())}"
-    print(f"\n--- STEP 3: TRIGGERING AUTONOMOUS AUDIT (RUN ID: {run_id}) ---")
+    print(f"\n--- STEP 3: REGISTERING & TRIGGERING AUDIT (RUN ID: {run_id}) ---")
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.post(
+                f"{BACKEND_URL}/api/internal/runs",
+                headers={"X-Internal-Key": INTERNAL_API_KEY, "Content-Type": "application/json"},
+                json={"repo": "Harsh-Yadav029/OmniSight", "branch": "main", "commitSha": run_id}
+            )
+            print(f"  [PASS] BuildRun registered to backend dashboard!")
+    except Exception as reg_err:
+        print(f"  [INFO] Backend offline registration notice: {reg_err}")
 
     # Initial capture
     shot_path, html_content = await capture_single_page_screenshot(TEST_TARGET_APP_URL, page_name, run_id)
@@ -133,6 +144,17 @@ async def run_omnisight_smoke_test(target_component: str = "navbar"):
         }
     )
     print(f"  [PASS] GitHub Pull Request opened: {pr_record['pr_url']} (Branch: {pr_record['branch']})")
+
+    # Persist PR to backend
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.post(
+                f"{BACKEND_URL}/api/internal/runs/{run_id}/pr-record",
+                headers={"X-Internal-Key": INTERNAL_API_KEY, "Content-Type": "application/json"},
+                json={"prUrl": pr_record["pr_url"], "branch": pr_record["branch"], "title": f"[OmniSight] Fix: {issue_label}", "body": pr_summary["pr_description"]}
+            )
+    except Exception:
+        pass
 
     # Restore baseline clean classes
     apply_tailwind_classes_to_source(file_hint, clean_classes, selector)

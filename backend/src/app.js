@@ -8,7 +8,10 @@ import internalRoutes from './routes/internal.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const runsPath = path.resolve(__dirname, '../../ml-service/runs');
+
+const rootRuns = path.resolve(__dirname, '../../runs');
+const mlRuns = path.resolve(__dirname, '../../ml-service/runs');
+const localRuns = path.resolve(__dirname, '../runs');
 
 const app = express();
 
@@ -19,9 +22,13 @@ app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 // Favicon handler
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Serve runs and screenshot artifacts statically
-app.use('/runs', express.static(runsPath));
-app.use('/screenshots', express.static(runsPath));
+// Serve runs and screenshot artifacts statically from all possible locations
+app.use('/runs', express.static(rootRuns));
+app.use('/runs', express.static(mlRuns));
+app.use('/runs', express.static(localRuns));
+
+app.use('/screenshots', express.static(rootRuns));
+app.use('/screenshots', express.static(mlRuns));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
