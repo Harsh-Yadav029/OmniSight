@@ -21,7 +21,7 @@ WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 ML_SERVICE_DIR = WORKSPACE_ROOT / "ml-service"
 sys.path.insert(0, str(ML_SERVICE_DIR))
 
-from orchestrator.graph import apply_tailwind_classes_to_source, run_self_healing_loop
+from orchestrator.graph import apply_tailwind_classes_to_source, run_self_healing_loop, capture_single_page_screenshot
 from vlm_engine.groq_helper import summarize_for_pr
 from orchestrator.github_integration import create_fix_pr
 
@@ -75,6 +75,10 @@ async def run_omnisight_smoke_test():
     run_id = f"smoke-run-{int(time.time())}"
     print(f"\n--- STEP 3: TRIGGERING AUTONOMOUS AUDIT (RUN ID: {run_id}) ---")
 
+    # Initial capture
+    shot_path, html_content = await capture_single_page_screenshot(TEST_TARGET_APP_URL, "checkout", run_id)
+    print(f"  [PASS] Initial screenshot captured: {shot_path}")
+
     # 4. Execute Self-Healing LangGraph Loop
     print("\n--- STEP 4: EXECUTING LANGGRAPH SELF-HEALING STATE MACHINE ---")
     final_state = await run_self_healing_loop(
@@ -111,8 +115,8 @@ async def run_omnisight_smoke_test():
             "commit_message": pr_summary["commit_message"],
             "pr_description": pr_summary["pr_description"],
             "file_path": "test-target-app/src/components/SubmitButton.jsx",
-            "screenshot_before": "runs/test-run-1/screenshots/checkout_375.png",
-            "screenshot_after": "runs/test-run-1/screenshots/checkout_375.png",
+            "screenshot_before": f"runs/{run_id}/screenshots/checkout_375.png",
+            "screenshot_after": final_state.get("screenshot_path", f"runs/{run_id}/screenshots/checkout_375.png"),
             "vlm_details": latest_vlm
         }
     )

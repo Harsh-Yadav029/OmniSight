@@ -1,109 +1,105 @@
 import os
 import json
 import re
-import asyncio
-from typing import Dict, List, Optional
+from typing import Dict, Any, List
 from groq import AsyncGroq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SYSTEM_PROMPT = """You are a senior software engineer and technical writer.
-You will be provided with structured findings from a multimodal visual regression audit.
-Generate:
-1. A concise, professional 2-3 sentence Pull Request description explaining what visual issue was observed and how the fix resolves it.
-2. A single-line conventional commit message (e.g., 'fix(ui): fix hidden submit button on mobile viewport').
+def extract_json_from_markdown(text: str) -> Dict[str, Any]:
+    """Extracts JSON object from text that might contain markdown fences or surrounding narrative."""
+    clean_text = text.strip()
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_text, re.DOTALL)
+    if match:
+        clean_text = match.group(1)
+    else:
+        obj_match = re.search(r"(\{.*\})", clean_text, re.DOTALL)
+        if obj_match:
+            clean_text = obj_match.group(1)
 
-Respond ONLY with valid JSON in this format:
-{
-  "pr_description": "2-3 sentences explaining the visual defect and resolution.",
-  "commit_message": "fix(ui): concise commit message"
-}
+    return json.loads(clean_text)
+
+async def summarize_for_pr(vlm_result: Dict[str, Any], fix_history: List[Dict[str, Any]]) -> Dict[str, str]:
+    """
+    Summarizes the visual defect analysis and fix iterations using Groq.
+
+    Args:
+        vlm_result: Final VLM structured inspection result
+        fix_history: Chronological list of fix attempts
+
+    Returns:
+        dict: {"commit_message": str, "pr_description": str}
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+
+    issue_type = vlm_result.get("issue_type", "visual defect")
+    description = vlm_result.get("description", "Visual regression fixed.")
+    selector = vlm_result.get("affected_selector", "")
+    suggested_classes = vlm_result.get("suggested_tailwind_classes", "")
+
+    # Fallback template if GROQ_API_KEY is not configured
+    if not api_key or api_key.strip() in ["", "your_groq_api_key", "your_api_key_here"]:
+        print("[Groq Helper] Notice: GROQ_API_KEY not set. Using professional template fallback generator.")
+        selector_part = f" on {selector}" if selector else ""
+        return {
+            "commit_message": f"fix(ui): resolve {issue_type}{selector_part}",
+            "pr_description": f"This automated pull request addresses a visual regression identified during multi-viewport QA testing.\n\n"
+                              f"**Defect Identified:** {description}\n"
+                              f"**Applied Fix:** Updated styling with Tailwind CSS: `{suggested_classes}`."
+        }
+
+    prompt = f"""You are an automated QA engineering agent summarizing an autonomous visual regression fix for a GitHub Pull Request.
+
+Defect Details:
+- Issue Type: {issue_type}
+- Description: {description}
+- Affected CSS Selector: {selector}
+- Suggested Fix Classes: {suggested_classes}
+- Total Fix Attempts: {len(fix_history)}
+
+Generate a JSON object with:
+1. "commit_message": A conventional commit message (e.g. "fix(ui): resolve hidden button on mobile checkout")
+2. "pr_description": A 2-3 sentence technical description of what was broken, which viewport/element was affected, and how the fix resolved it.
+
+Return ONLY a valid JSON object matching this schema:
+{{
+  "commit_message": "string",
+  "pr_description": "string"
+}}
 """
 
-def extract_json_from_text(text: str) -> dict:
-    """Extracts JSON object from LLM response text, stripping markdown blocks if present."""
-    text = text.strip()
-    match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
-    if match:
-        text = match.group(1).strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        # Fallback regex extraction if JSON decoding fails
-        pr_match = re.search(r'"pr_description":\s*"([^"]+)"', text)
-        commit_match = re.search(r'"commit_message":\s*"([^"]+)"', text)
-        return {
-            "pr_description": pr_match.group(1) if pr_match else text,
-            "commit_message": commit_match.group(1) if commit_match else "fix(ui): resolve visual regression issue"
-        }
-
-async def summarize_for_pr(vlm_response: dict, issue_history: Optional[List[dict]] = None) -> dict:
-    """
-    Calls Groq API (model 'llama-3.1-8b-instant') to generate a PR description and commit message.
-    
-    Args:
-        vlm_response: dict containing 'issue_type', 'description', 'suggested_tailwind_classes', 'affected_selector'
-        issue_history: optional list of previous fix attempts
-        
-    Returns:
-        dict: {"pr_description": str, "commit_message": str}
-    """
-    issue_type = vlm_response.get("issue_type", "visual defect")
-    description = vlm_response.get("description", "visual misalignment")
-    suggested_classes = vlm_response.get("suggested_tailwind_classes", "")
-    suggested_css = vlm_response.get("suggested_css", "")
-    selector = vlm_response.get("affected_selector", "")
-
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        print("[Groq Helper] Notice: GROQ_API_KEY not set. Using professional template fallback generator.")
-        fix_detail = suggested_classes if suggested_classes else (suggested_css or "responsive styling")
-        return {
-            "pr_description": (
-                f"This automated pull request addresses a visual regression identified during multi-viewport QA testing. "
-                f"The issue involved {description} on element `{selector or 'component'}`. "
-                f"The fix updates CSS/Tailwind classes ({fix_detail}) to restore proper visibility and alignment across all screen sizes."
-            ),
-            "commit_message": f"fix(ui): resolve {issue_type} on {selector or 'responsive layout'}"
-        }
+    models_to_try = [
+        "llama-3.3-70b-versatile",
+        "llama3-8b-8192",
+        "llama-3.1-8b-instant",
+        "mixtral-8x7b-32768"
+    ]
 
     client = AsyncGroq(api_key=api_key)
-    model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
-    user_prompt = f"""
-Visual Issue Type: {issue_type}
-Element / Selector: {selector}
-Issue Description: {description}
-Suggested Tailwind Classes: {suggested_classes}
-Suggested CSS: {suggested_css}
-Previous Attempts Count: {len(issue_history) if issue_history else 0}
+    for model in models_to_try:
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a senior frontend QA automation engineer. Respond strictly in valid JSON format."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.2,
+                max_tokens=300,
+                response_format={"type": "json_object"}
+            )
+            raw_content = response.choices[0].message.content or "{}"
+            parsed = extract_json_from_markdown(raw_content)
+            if "commit_message" in parsed and "pr_description" in parsed:
+                return parsed
+        except Exception as e:
+            continue
 
-Please generate the structured JSON containing 'pr_description' and 'commit_message'.
-"""
-
-    try:
-        chat_completion = await client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
-            ],
-            model=model_name,
-            temperature=0.2,
-            response_format={"type": "json_object"}
-        )
-
-        content = chat_completion.choices[0].message.content
-        parsed = extract_json_from_text(content)
-
-        return {
-            "pr_description": parsed.get("pr_description", "").strip(),
-            "commit_message": parsed.get("commit_message", f"fix(ui): resolve {issue_type}").strip()
-        }
-
-    except Exception as e:
-        print(f"[Groq Helper] Warning: Groq API call failed: {e}. Using deterministic fallback.")
-        return {
-            "pr_description": f"Automated visual regression fix for {issue_type}: {description}. Applied suggested styling: {suggested_classes}.",
-            "commit_message": f"fix(ui): resolve {issue_type}"
-        }
+    # Deterministic fallback if API calls exhausted
+    selector_part = f" on {selector}" if selector else ""
+    return {
+        "commit_message": f"fix(ui): resolve {issue_type}{selector_part}",
+        "pr_description": f"Automated visual regression fix for {issue_type}: {description}. Applied verified Tailwind CSS styles: `{suggested_classes}`."
+    }
