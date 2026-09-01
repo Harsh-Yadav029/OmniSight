@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   Wrench, 
   RefreshCw,
-  Eye
+  Eye,
+  Play
 } from 'lucide-react';
 import { api } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
@@ -20,6 +21,7 @@ import { StatusBadge } from '../components/StatusBadge';
 export const RunsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [triggering, setTriggering] = useState(false);
 
   // React Query fetching runs with 5-second polling on in-progress runs
   const { data: runs = [], isLoading, isError, refetch, isFetching } = useQuery({
@@ -33,6 +35,30 @@ export const RunsList = () => {
     }
   });
 
+  const handleTriggerRun = async () => {
+    setTriggering(true);
+    try {
+      // Trigger build event webhook directly to ML-Service
+      await fetch('http://localhost:8000/webhook/build-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repo: 'Harsh-Yadav029/OmniSight',
+          branch: 'main',
+          commitSha: Math.random().toString(36).substring(2, 9)
+        })
+      });
+      setTimeout(() => {
+        refetch();
+        setTriggering(false);
+      }, 1200);
+    } catch (e) {
+      console.warn('Webhook dispatch notice:', e);
+      refetch();
+      setTriggering(false);
+    }
+  };
+
   const filteredRuns = runs.filter((run) => {
     const matchesSearch = 
       (run.repo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,7 +66,11 @@ export const RunsList = () => {
       (run.commitSha || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (run._id || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'ALL' || run.status === statusFilter;
+    const matchesStatus = 
+      statusFilter === 'ALL' || 
+      run.status === statusFilter ||
+      (statusFilter === 'pr_created' && (run.status === 'verified' || run.status === 'pr_created' || run.status === 'completed'));
+
     return matchesSearch && matchesStatus;
   });
 
@@ -62,14 +92,25 @@ export const RunsList = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="self-start md:self-auto flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-indigo-400' : ''}`} />
-          <span>{isFetching ? 'Syncing Runs...' : 'Refresh'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleTriggerRun}
+            disabled={triggering}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>{triggering ? 'Triggering...' : 'Trigger Visual Audit'}</span>
+          </button>
+
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-indigo-400' : ''}`} />
+            <span>{isFetching ? 'Syncing...' : 'Refresh'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Metrics Row */}
@@ -134,14 +175,14 @@ export const RunsList = () => {
       {isLoading ? (
         <div className="p-12 text-center text-slate-400 space-y-3">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-400" />
-          <p className="text-sm font-semibold">Loading build runs from MongoDB...</p>
+          <p className="text-sm font-semibold">Loading build runs...</p>
         </div>
       ) : filteredRuns.length === 0 ? (
         <div className="p-12 text-center bg-slate-900/40 border border-slate-800 rounded-2xl text-slate-400 space-y-3">
           <Eye className="w-8 h-8 mx-auto text-slate-600" />
           <h3 className="text-base font-bold text-slate-200">No Build Runs Found</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Trigger a CI webhook event or run `ml-service/main.py` to initiate visual regression testing.
+            Click the "Trigger Visual Audit" button above or run `python scripts/smoke_test.py` to initiate visual regression testing.
           </p>
         </div>
       ) : (
@@ -162,14 +203,14 @@ export const RunsList = () => {
                 {filteredRuns.map((run) => (
                   <tr key={run._id} className="hover:bg-slate-800/40 transition group">
                     <td className="px-6 py-4 font-mono font-bold text-slate-200">
-                      {run._id}
+                      {String(run._id).substring(0, 18)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5 font-semibold text-white">
                         <GitBranch className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                         <span>{run.branch || 'main'}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{run.repo || 'test/repo'}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{run.repo || 'Harsh-Yadav029/OmniSight'}</p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1 font-mono text-slate-300 bg-slate-950 px-2 py-1 rounded border border-slate-800 w-fit">
@@ -183,7 +224,7 @@ export const RunsList = () => {
                     <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
                       <div className="flex items-center gap-1 text-[11px]">
                         <Clock className="w-3 h-3 text-slate-500" />
-                        <span>{run.createdAt ? new Date(run.createdAt).toLocaleString() : 'Just now'}</span>
+                        <span>{run.createdAt ? new Date(run.createdAt).toLocaleTimeString() : 'Just now'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
