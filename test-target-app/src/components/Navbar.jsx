@@ -8,7 +8,7 @@ export const Navbar = () => {
   const location = useLocation();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#FAFAF8] border-b border-[#E8E6E1] font-sans">
+    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Left: Brand + Shop link */}
         <div className="flex items-center gap-8">
