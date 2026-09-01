@@ -1,0 +1,45 @@
+services:
+  # 1. Express + Mongoose Backend API
+  - type: web
+    name: omnisight-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: ML_SERVICE_URL
+        sync: false
+
+  # 2. FastAPI + Playwright + LangGraph ML Service
+  - type: web
+    name: omnisight-ml-service
+    env: docker
+    rootDir: ml-service
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_REPO
+        value: Harsh-Yadav029/OmniSight
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: TEST_TARGET_APP_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
