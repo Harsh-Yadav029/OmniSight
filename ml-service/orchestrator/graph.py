@@ -7,7 +7,7 @@ import httpx
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 
-from navigator.navigate_checkout import run_navigation, capture_page_snapshots
+from navigator.navigate_checkout import run_navigation, trim_scripts
 from vlm_engine.analyze import analyze_screenshot, VLMResponse
 from orchestrator.extract_fix import extract_fix, CodeFix
 
@@ -91,10 +91,9 @@ def apply_tailwind_classes_to_source(file_hint: str, target_classes: str) -> boo
 
     return applied_any
 
-async def capture_single_page_screenshot(base_url: str, page_name: str, run_id: str) -> tuple[str, str]:
-    """Captures a fresh mobile (375px) screenshot of the specified page for iterative re-evaluation."""
-    from playwright.async_api import async_playwright
-    from navigator.navigate_checkout import trim_scripts
+def _sync_capture_screenshot(base_url: str, page_name: str, run_id: str) -> tuple[str, str]:
+    """Synchronous single page capture in thread pool for Windows compatibility."""
+    from playwright.sync_api import sync_playwright
 
     output_dir = Path("runs") / run_id / "screenshots"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -107,25 +106,25 @@ async def capture_single_page_screenshot(base_url: str, page_name: str, run_id: 
         target_url = f"{clean_base}/checkout"
 
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
             try:
-                await page.set_viewport_size({"width": 375, "height": 667})
-                await page.goto(target_url, wait_until="networkidle", timeout=12000)
-                await page.wait_for_timeout(500)
+                page.set_viewport_size({"width": 375, "height": 667})
+                page.goto(target_url, wait_until="networkidle", timeout=12000)
+                page.wait_for_timeout(500)
 
-                content = await page.content()
+                content = page.content()
                 trimmed = trim_scripts(content)
                 with open(html_file, "w", encoding="utf-8") as f:
                     f.write(trimmed)
 
-                await page.screenshot(path=str(screenshot_file), full_page=True)
+                page.screenshot(path=str(screenshot_file), full_page=True)
             finally:
-                await browser.close()
+                browser.close()
         return str(screenshot_file), trimmed
     except Exception as e:
-        print(f"[Playwright] Notice: Real-time browser capture encountered ({e}). Generating fallback snapshot.")
+        print(f"[Playwright] Fallback capture notice: {e}")
         from PIL import Image
         img = Image.new("RGB", (375, 667), color=(15, 23, 42))
         img.save(screenshot_file)
@@ -133,6 +132,10 @@ async def capture_single_page_screenshot(base_url: str, page_name: str, run_id: 
         with open(html_file, "w", encoding="utf-8") as f:
             f.write(trimmed)
         return str(screenshot_file), trimmed
+
+async def capture_single_page_screenshot(base_url: str, page_name: str, run_id: str) -> tuple[str, str]:
+    """Captures a fresh mobile (375px) screenshot of the specified page via thread execution."""
+    return await asyncio.to_thread(_sync_capture_screenshot, base_url, page_name, run_id)
 
 # --- LangGraph Nodes ---
 
