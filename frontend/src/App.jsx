@@ -21,12 +21,12 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center font-sans">
         <div className="flex flex-col items-center space-y-4">
           <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center animate-pulse">
-            <span className="material-symbols-outlined text-on-primary-container text-[20px]">workspaces</span>
+            <span className="material-symbols-outlined text-white text-[20px]">all_inclusive</span>
           </div>
-          <p className="text-body-sm font-semibold text-on-surface-variant">Initializing OmniSight Engine...</p>
+          <p className="text-sm font-semibold text-[#6f7979]">Initializing OmniSight Engine...</p>
         </div>
       </div>
     );
@@ -37,7 +37,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas antialiased">
+    <div className="flex h-screen overflow-hidden bg-canvas antialiased font-sans">
       {/* Docked Sidebar */}
       <Sidebar />
 
@@ -53,7 +53,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route

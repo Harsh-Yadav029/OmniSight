@@ -4,13 +4,13 @@ import { Trash2, Plus, Minus, Lock, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export const Cart = () => {
-  const { cart, updateQuantity, removeFromCart, cartTotal } = useCart();
+  const { cart, updateQuantity, removeFromCart, subtotal = 0 } = useCart();
   const navigate = useNavigate();
 
-  // Mock initial demo items matching store inventory if cart is empty
+  // If cart is empty, provide demo starter items
   const displayItems = cart.length > 0 ? cart : [
     {
-      id: 'demo-1',
+      id: 'prod-1',
       name: 'Oversized Heavyweight Hoodie',
       variant: 'Oatmeal Heather · L',
       price: 2499,
@@ -18,7 +18,7 @@ export const Cart = () => {
       imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=400&auto=format&fit=crop&q=80'
     },
     {
-      id: 'demo-2',
+      id: 'prod-2',
       name: 'Relaxed Linen Trousers',
       variant: 'Natural Beige · 32',
       price: 1899,
@@ -28,8 +28,8 @@ export const Cart = () => {
   ];
 
   const total = cart.length > 0
-    ? cartTotal
-    : displayItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    ? (subtotal || 0)
+    : displayItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 font-sans space-y-8" id="cart-page">
@@ -60,10 +60,10 @@ export const Cart = () => {
                     {item.name}
                   </h3>
                   <p className="text-xs text-[#6f7979] mt-0.5">
-                    {item.variant || 'Standard'}
+                    {item.variant || 'Standard Fit'}
                   </p>
                   <p className="text-sm font-extrabold text-[#1d1b17] mt-2 sm:hidden">
-                    ₹{item.price.toLocaleString('en-IN')}
+                    ₹{(item.price || 0).toLocaleString('en-IN')}
                   </p>
                 </div>
               </div>
@@ -71,15 +71,16 @@ export const Cart = () => {
               <div className="flex items-center justify-between sm:justify-end gap-6 pt-3 sm:pt-0 border-t sm:border-0 border-[#f3ede6]">
                 <div className="text-right hidden sm:block">
                   <span className="font-extrabold text-[#1d1b17] text-base">
-                    ₹{item.price.toLocaleString('en-IN')}
+                    ₹{(item.price || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
 
                 {/* Quantity Controls */}
                 <div className="flex items-center border border-[#E8E6E1] rounded-xl bg-white px-2 py-1 shadow-sm">
                   <button
-                    onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
+                    onClick={() => updateQuantity(item.id, -1)}
                     className="p-1 text-[#6f7979] hover:text-[#1d1b17] transition"
+                    title="Decrease"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -87,8 +88,9 @@ export const Cart = () => {
                     {item.quantity || 1}
                   </span>
                   <button
-                    onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
+                    onClick={() => updateQuantity(item.id, 1)}
                     className="p-1 text-[#6f7979] hover:text-[#1d1b17] transition"
+                    title="Increase"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -117,7 +119,7 @@ export const Cart = () => {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-[#6f7979]">
                 <span>Subtotal</span>
-                <span className="font-bold text-[#1d1b17]">₹{total.toLocaleString('en-IN')}</span>
+                <span className="font-bold text-[#1d1b17]">₹{(total || 0).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#6f7979]">
                 <span>Shipping</span>
@@ -131,7 +133,7 @@ export const Cart = () => {
 
             <div className="pt-4 border-t border-[#E8E6E1] flex justify-between items-baseline">
               <span className="text-sm font-bold text-[#1d1b17]">Estimated Total</span>
-              <span className="text-xl font-extrabold text-[#1d1b17]">₹{total.toLocaleString('en-IN')}</span>
+              <span className="text-xl font-extrabold text-[#1d1b17]">₹{(total || 0).toLocaleString('en-IN')}</span>
             </div>
 
             <button

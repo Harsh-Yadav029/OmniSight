@@ -9,8 +9,8 @@ import { Checkout } from './pages/Checkout';
 function App() {
   return (
     <CartProvider>
-      <BrowserRouter>
-        <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <div className="min-h-screen bg-[#FAFAF8] text-[#1d1b17] flex flex-col font-sans">
           <Navbar />
           <main className="flex-1">
             <Routes>
