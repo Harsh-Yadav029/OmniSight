@@ -40,9 +40,9 @@ export const ProductListing = () => {
         </div>
       </div>
 
-      {/* 3-Column Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {gridProducts.map((product, idx) => (
+      {/* 3-Column Products Grid with id="product-grid" */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="product-grid">
+        {gridProducts.map((product) => (
           <div
             key={product.id}
             className="bg-white rounded-2xl border border-[#E8E6E1] p-5 shadow-[0_4px_20px_-2px_rgba(26,26,26,0.05)] hover:shadow-md transition flex flex-col justify-between"
@@ -79,11 +79,7 @@ export const ProductListing = () => {
 
               <button
                 onClick={() => addToCart(product)}
-                className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm ${
-                  idx === 0
-                    ? 'bg-[#016464] hover:bg-[#004f50] text-white'
-                    : 'bg-white hover:bg-[#FAF9F6] text-[#1d1b17] border border-[#E8E6E1]'
-                }`}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 bg-[#016464] hover:bg-[#004f50] text-white transition shadow-sm"
                 id={`add-to-cart-${product.id}`}
               >
                 <Plus className="w-4 h-4" />
@@ -128,6 +124,7 @@ export const ProductListing = () => {
               <button
                 onClick={() => addToCart(featuredProduct)}
                 className="bg-[#016464] hover:bg-[#004f50] text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-sm transition flex items-center gap-2 active:scale-[0.98]"
+                id={`add-to-cart-${featuredProduct.id}`}
               >
                 <Plus className="w-4 h-4" />
                 <span>Add to Cart</span>
