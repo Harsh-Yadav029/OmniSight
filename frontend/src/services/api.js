@@ -25,7 +25,7 @@ export const api = {
     const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, role })
+      body: JSON.stringify({ name: username, username, email, password, role })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Registration failed');

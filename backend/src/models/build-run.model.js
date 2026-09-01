@@ -26,6 +26,7 @@ const buildRunSchema = new Schema(
         'fix_applied',
         'verified',
         'pr_opened',
+        'pr_created',
         'approved',
         'rejected',
         'failed',

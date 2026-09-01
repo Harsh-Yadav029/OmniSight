@@ -20,6 +20,9 @@ def extract_json_from_markdown(text: str) -> Dict[str, Any]:
 
     return json.loads(clean_text)
 
+# Export alias for backward test compatibility
+extract_json_from_text = extract_json_from_markdown
+
 async def summarize_for_pr(vlm_result: Dict[str, Any], fix_history: List[Dict[str, Any]]) -> Dict[str, str]:
     """
     Summarizes the visual defect analysis and fix iterations using Groq.
