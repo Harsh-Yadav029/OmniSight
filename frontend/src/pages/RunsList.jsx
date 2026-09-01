@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 
-const getRunIcon = (status, repo) => {
+const getRunIcon = (status) => {
   if (status === 'analyzing' || status === 'pending') return { icon: 'analytics', bg: 'bg-[#e5ffe9] text-[#016464]' };
   if (status === 'screenshots_captured') return { icon: 'photo_library', bg: 'bg-[#f3ede6] text-[#6f7979]' };
   if (status === 'fix_applied') return { icon: 'build', bg: 'bg-[#ffdbc8] text-[#904c1b]' };
-  if (status === 'verified' || status === 'completed') return { icon: 'check_circle', bg: 'bg-[#e5ffe9] text-[#356346]' };
+  if (status === 'verified' || status === 'completed' || status === 'approved') return { icon: 'check_circle', bg: 'bg-[#e5ffe9] text-[#356346]' };
   if (status === 'pr_created') return { icon: 'code', bg: 'bg-[#dafffe] text-[#016464]' };
   if (status === 'failed' || status === 'rejected') return { icon: 'cancel', bg: 'bg-[#ffdad6] text-[#ba1a1a]' };
   return { icon: 'widgets', bg: 'bg-[#f3ede6] text-[#6f7979]' };
@@ -67,8 +67,8 @@ export const RunsList = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          repo: 'frontend-webapp',
-          branch: 'feature/new-nav',
+          repo: 'OmniSight',
+          branch: 'main',
           commitSha: Math.random().toString(36).substring(2, 9)
         })
       });
@@ -79,7 +79,7 @@ export const RunsList = () => {
   };
 
   return (
-    <div className="p-8 md:p-12 max-w-6xl mx-auto w-full font-sans">
+    <div className="p-8 md:p-12 max-w-5xl mx-auto w-full font-sans">
       {/* Page Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
         <div>
@@ -94,7 +94,7 @@ export const RunsList = () => {
         <button
           onClick={handleTriggerRun}
           disabled={triggering}
-          className="bg-[#016464] hover:bg-[#004f50] text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-[0.98] disabled:opacity-50"
+          className="bg-[#016464] hover:bg-[#004f50] text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-[0.98] disabled:opacity-50 shrink-0"
         >
           <span className="material-symbols-outlined text-[18px]">
             {triggering ? 'sync' : 'play_arrow'}
@@ -118,11 +118,11 @@ export const RunsList = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {runs.map((run) => {
-            const iconConfig = getRunIcon(run.status, run.repo);
+            const iconConfig = getRunIcon(run.status);
             const badgeConfig = getStatusBadgeConfig(run.status);
-            const repoName = run.repo?.includes('/') ? run.repo.split('/')[1] : run.repo || 'frontend-webapp';
+            const repoName = run.repo?.includes('/') ? run.repo.split('/')[1] : run.repo || 'OmniSight';
 
             return (
               <Link
@@ -139,11 +139,11 @@ export const RunsList = () => {
                   </div>
 
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
                       <span className="text-base font-bold text-[#1d1b17] truncate">
                         {repoName}
                       </span>
-                      <span className="font-mono text-xs bg-[#f3ede6] text-[#1d1b17] font-semibold px-2.5 py-0.5 rounded-md">
+                      <span className="text-xs bg-[#f3ede6] text-[#1d1b17] font-semibold px-2.5 py-0.5 rounded-md tracking-normal font-sans">
                         {run.branch || 'main'}
                       </span>
                     </div>

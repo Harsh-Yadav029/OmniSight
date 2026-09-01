@@ -13,18 +13,18 @@ export const Sidebar = () => {
   };
 
   return (
-    <nav className="hidden md:flex flex-col h-full py-6 w-64 fixed left-0 top-0 z-40 bg-[#f9f3eb] border-r border-[#E8E6E1] shrink-0 font-sans">
+    <aside className="hidden md:flex flex-col h-screen py-6 w-64 bg-[#f9f3eb] border-r border-[#E8E6E1] shrink-0 font-sans select-none">
       {/* Brand Header */}
-      <div className="px-6 pb-6 mb-4">
+      <div className="px-6 pb-6 border-b border-[#E8E6E1] mb-4">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#016464] flex items-center justify-center text-white font-black text-lg shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-[#016464] flex items-center justify-center text-white shadow-sm shrink-0">
             <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
               all_inclusive
             </span>
           </div>
-          <div>
-            <h1 className="text-base font-extrabold text-[#016464] leading-tight">OmniSight QA</h1>
-            <p className="text-[11px] font-semibold text-[#6f7979] leading-tight">Autonomous Inspection</p>
+          <div className="min-w-0">
+            <h1 className="text-base font-extrabold text-[#016464] leading-tight truncate">OmniSight QA</h1>
+            <p className="text-[11px] font-semibold text-[#6f7979] leading-tight truncate">Autonomous Inspection</p>
           </div>
         </Link>
       </div>
@@ -57,20 +57,20 @@ export const Sidebar = () => {
       </div>
 
       {/* User Session & Logout */}
-      <div className="px-4 pt-4 mt-auto">
+      <div className="px-4 pt-4 border-t border-[#E8E6E1] mt-auto">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-[#3f4948] hover:bg-[#ede7e0] transition"
+          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-[#3f4948] hover:bg-[#ede7e0] transition"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#016464] text-white flex items-center justify-center font-bold text-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-[#016464] text-white flex items-center justify-center font-bold text-xs shrink-0">
               {user?.username?.[0]?.toUpperCase() || 'Q'}
             </div>
-            <span className="text-sm font-semibold text-[#1d1b17]">Logout</span>
+            <span className="text-sm font-semibold text-[#1d1b17] truncate">Logout</span>
           </div>
-          <span className="material-symbols-outlined text-[20px] text-[#6f7979]">logout</span>
+          <span className="material-symbols-outlined text-[18px] text-[#6f7979] shrink-0">logout</span>
         </button>
       </div>
-    </nav>
+    </aside>
   );
 };
