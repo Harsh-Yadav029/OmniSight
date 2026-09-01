@@ -16,6 +16,9 @@ app.use(cors());
 app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 
+// Favicon handler
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Serve runs and screenshot artifacts statically
 app.use('/runs', express.static(runsPath));
 app.use('/screenshots', express.static(runsPath));

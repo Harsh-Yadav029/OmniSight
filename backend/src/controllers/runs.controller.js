@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { BuildRun } from '../models/build-run.model.js';
 import { FixAttempt } from '../models/fix-attempt.model.js';
 import { PullRequestRecord } from '../models/pull-request-record.model.js';
@@ -10,54 +11,122 @@ export const getRuns = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const skip = (page - 1) * limit;
 
-  const totalRuns = await BuildRun.countDocuments();
-  const runs = await BuildRun.find()
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const isDbConnected = mongoose.connection.readyState === 1;
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        runs,
-        pagination: {
-          total: totalRuns,
-          page,
-          limit,
-          totalPages: Math.ceil(totalRuns / limit) || 1,
+  if (isDbConnected) {
+    const totalRuns = await BuildRun.countDocuments();
+    const runs = await BuildRun.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          runs,
+          pagination: {
+            total: totalRuns,
+            page,
+            limit,
+            totalPages: Math.ceil(totalRuns / limit) || 1,
+          },
         },
+        'Build runs retrieved successfully'
+      )
+    );
+  } else {
+    // Offline demo fallback run
+    const demoRuns = [
+      {
+        _id: 'demo-run-checkout-001',
+        repo: 'Harsh-Yadav029/OmniSight',
+        branch: 'main',
+        commitSha: 'a8f192b',
+        status: 'verified',
+        createdAt: new Date(),
       },
-      'Build runs retrieved successfully'
-    )
-  );
+    ];
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          runs: demoRuns,
+          pagination: { total: 1, page: 1, limit: 10, totalPages: 1 },
+        },
+        'Build runs retrieved (Demo Mode)'
+      )
+    );
+  }
 });
 
 export const getRunById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const isDbConnected = mongoose.connection.readyState === 1;
 
-  const run = await BuildRun.findById(id);
-  if (!run) {
-    throw new ApiError(404, `BuildRun with id ${id} not found`);
-  }
+  if (isDbConnected) {
+    const run = await BuildRun.findById(id);
+    if (!run) {
+      throw new ApiError(404, `BuildRun with id ${id} not found`);
+    }
 
-  const fixAttempts = await FixAttempt.find({ buildRunId: id }).sort({ attemptNumber: 1 });
-  const pullRequestRecord = await PullRequestRecord.findOne({ buildRunId: id }).populate(
-    'decidedBy',
-    'name email role'
-  );
+    const fixAttempts = await FixAttempt.find({ buildRunId: id }).sort({ attemptNumber: 1 });
+    const pullRequestRecord = await PullRequestRecord.findOne({ buildRunId: id }).populate(
+      'decidedBy',
+      'name email role'
+    );
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          run,
+          fixAttempts,
+          pullRequestRecord,
+        },
+        'Build run details retrieved successfully'
+      )
+    );
+  } else {
+    // Offline demo fallback run details
+    const demoRun = {
+      _id: id,
+      repo: 'Harsh-Yadav029/OmniSight',
+      branch: 'main',
+      commitSha: 'a8f192b',
+      status: 'verified',
+      createdAt: new Date(),
+    };
+
+    const demoAttempts = [
       {
-        run,
-        fixAttempts,
-        pullRequestRecord,
+        attemptNumber: 1,
+        issueType: 'hidden button',
+        description: 'Submit button clipped on mobile viewport (375px)',
+        selector: '#submit-order-button',
+        tailwindClasses: 'w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2',
+        verified: true,
       },
-      'Build run details retrieved successfully'
-    )
-  );
+    ];
+
+    const demoPR = {
+      prUrl: 'https://github.com/Harsh-Yadav029/OmniSight/pull/101',
+      branchName: `omnisight/fix-${id}`,
+      decision: 'pending',
+    };
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          run: demoRun,
+          fixAttempts: demoAttempts,
+          pullRequestRecord: demoPR,
+        },
+        'Build run details retrieved (Demo Mode)'
+      )
+    );
+  }
 });
 
 export const updateRunDecision = asyncHandler(async (req, res) => {
@@ -68,21 +137,27 @@ export const updateRunDecision = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Decision must be either "approved" or "rejected"');
   }
 
-  const run = await BuildRun.findById(id);
-  if (!run) {
-    throw new ApiError(404, `BuildRun with id ${id} not found`);
-  }
+  const isDbConnected = mongoose.connection.readyState === 1;
+  let run = { _id: id, status: decision };
+  let prRecord = { prUrl: 'https://github.com/Harsh-Yadav029/OmniSight/pull/101', decision };
 
-  let prRecord = await PullRequestRecord.findOne({ buildRunId: id });
-  if (prRecord) {
-    prRecord.decision = decision;
-    prRecord.decidedBy = req.user?._id;
-    prRecord.decidedAt = new Date();
-    await prRecord.save();
-  }
+  if (isDbConnected) {
+    run = await BuildRun.findById(id);
+    if (!run) {
+      throw new ApiError(404, `BuildRun with id ${id} not found`);
+    }
 
-  run.status = decision;
-  await run.save();
+    prRecord = await PullRequestRecord.findOne({ buildRunId: id });
+    if (prRecord) {
+      prRecord.decision = decision;
+      prRecord.decidedBy = req.user?._id;
+      prRecord.decidedAt = new Date();
+      await prRecord.save();
+    }
+
+    run.status = decision;
+    await run.save();
+  }
 
   // Sync decision to associated GitHub PR via ML Service Internal API
   let githubSynced = false;
