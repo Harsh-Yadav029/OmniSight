@@ -111,8 +111,9 @@ export const loginUser = asyncHandler(async (req, res) => {
       password === 'password123'
     ) {
       const isManager = normalizedEmail === 'qa_manager@omnisight.dev';
+      const demoId = isManager ? '507f1f77bcf86cd799439011' : '507f1f77bcf86cd799439012';
       const demoUser = {
-        _id: isManager ? 'demo-qa-manager-id' : 'demo-viewer-id',
+        _id: demoId,
         name: isManager ? 'QA Manager (Demo)' : 'Viewer (Demo)',
         email: normalizedEmail,
         role: isManager ? 'qa_manager' : 'viewer',
