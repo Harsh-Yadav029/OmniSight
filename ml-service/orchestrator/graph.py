@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, END
 
 from navigator.navigate_checkout import run_navigation, trim_scripts
 from vlm_engine.analyze import analyze_screenshot, VLMResponse
-from orchestrator.extract_fix import extract_fix, CodeFix
+from orchestrator.extract_fix import extract_fix, CodeFix, infer_source_file
 
 load_dotenv()
 
@@ -44,10 +44,10 @@ async def patch_backend_status(run_id: str, status: str, fix_attempt: Optional[D
     except Exception as e:
         print(f"[Graph / Backend] Warning: Could not patch run status to backend ({e})")
 
-def apply_tailwind_classes_to_source(file_hint: str, target_classes: str) -> bool:
+def apply_tailwind_classes_to_source(file_hint: str, target_classes: str, selector: str = "") -> bool:
     """
-    Locates the source JSX file in test-target-app and updates the className / buttonClassName string.
-    Applies change to both active workspace and local repository paths.
+    Locates any target source JSX file in test-target-app and updates its styling.
+    Supports Navbar.jsx, ProductCard.jsx, CartItem.jsx, SubmitButton.jsx, CheckoutForm.jsx, etc.
     """
     possible_roots = [
         Path(__file__).resolve().parent.parent.parent / "test-target-app",
@@ -55,36 +55,67 @@ def apply_tailwind_classes_to_source(file_hint: str, target_classes: str) -> boo
         Path("C:/Users/harsh/Desktop/OmniSight/test-target-app"),
     ]
 
+    clean_file_hint = file_hint.replace("\\", "/").lstrip("/")
     applied_any = False
+
     for root in possible_roots:
-        target_path = root / file_hint.replace("\\", "/").lstrip("/")
+        target_path = root / clean_file_hint
         if not target_path.exists():
-            continue
+            # Try finding by basename across components
+            basename = Path(clean_file_hint).name
+            candidates = list(root.glob(f"**/{basename}"))
+            if candidates:
+                target_path = candidates[0]
+            else:
+                continue
 
         try:
             with open(target_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            # Pattern 1: buttonClassName = "..."
-            if "buttonClassName" in content:
+            new_content = content
+
+            # Strategy 1: Named className variable (e.g. const buttonClassName = "...")
+            if "buttonClassName" in new_content:
                 new_content = re.sub(
                     r'const buttonClassName = ["\'][^"\']*["\'];',
                     f'const buttonClassName = "{target_classes}";',
-                    content
+                    new_content
                 )
-            # Pattern 2: className="..." on button
+            # Strategy 2: Specific HTML Tag in selector (e.g. header, nav, button, div)
+            elif "header" in selector.lower() or "navbar" in clean_file_hint.lower():
+                new_content = re.sub(
+                    r'<header className=["\'][^"\']*["\']',
+                    f'<header className="{target_classes}"',
+                    new_content,
+                    count=1
+                )
+            # Strategy 3: Specific ID mentioned in selector (e.g. #nav-cart-btn)
+            elif selector and selector.startswith("#"):
+                elem_id = selector.lstrip("#")
+                # Look for element with this id and replace its className
+                pattern = rf'(id=["\']{elem_id}["\'][^>]*?className=["\'])[^"\']*?(["\'])'
+                if re.search(pattern, new_content):
+                    new_content = re.sub(pattern, rf'\g<1>{target_classes}\g<2>', new_content)
+                else:
+                    pattern_reverse = rf'(className=["\'])[^"\']*?(["\'][^>]*?id=["\']{elem_id}["\'])'
+                    if re.search(pattern_reverse, new_content):
+                        new_content = re.sub(pattern_reverse, rf'\g<1>{target_classes}\g<2>', new_content)
+                    else:
+                        new_content = re.sub(r'className=["\'][^"\']*["\']', f'className="{target_classes}"', new_content, count=1)
+            # Strategy 4: Top-level / First matching className in target component
             else:
                 new_content = re.sub(
                     r'className=["\'][^"\']*["\']',
                     f'className="{target_classes}"',
-                    content,
+                    new_content,
                     count=1
                 )
 
             with open(target_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
-            print(f"[Self-Healing] Successfully patched {target_path} with: {target_classes}")
+            print(f"[Self-Healing] Successfully patched {target_path} with: '{target_classes}'")
             applied_any = True
         except Exception as err:
             print(f"[Self-Healing] Error modifying {target_path}: {err}")
@@ -152,10 +183,11 @@ async def execute_node(state: OmniSightState) -> OmniSightState:
     current_fix = state.get("current_fix")
     if current_fix:
         target_classes = current_fix.get("tailwind_classes", "")
-        file_hint = current_fix.get("file_hint", "src/components/SubmitButton.jsx")
+        file_hint = current_fix.get("file_hint") or infer_source_file(current_fix.get("selector", ""), "", "")
+        selector = current_fix.get("selector", "")
         
-        print(f"[Execute Node] Injecting Tailwind classes into {file_hint}: '{target_classes}'")
-        apply_tailwind_classes_to_source(file_hint, target_classes)
+        print(f"[Execute Node] Injecting Tailwind classes into {file_hint} (selector: {selector}): '{target_classes}'")
+        apply_tailwind_classes_to_source(file_hint, target_classes, selector)
 
         # Brief delay to allow hot-module reloading in Vite
         await asyncio.sleep(1.0)
@@ -219,11 +251,12 @@ async def evaluate_node(state: OmniSightState) -> OmniSightState:
             state["current_fix"] = next_fix.model_dump()
         except Exception as fix_err:
             print(f"[Evaluate Node] Could not extract structured fix ({fix_err}). Using baseline fix fallback.")
+            inferred_file = infer_source_file(vlm_result.get("affected_selector", ""), vlm_result.get("description", ""), vlm_result.get("issue_type", ""))
             state["current_fix"] = {
-                "selector": "#submit-order-button",
-                "tailwind_classes": "w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold text-base shadow-md hover:shadow-lg transition flex items-center justify-center gap-2",
+                "selector": vlm_result.get("affected_selector", "#submit-order-button"),
+                "tailwind_classes": vlm_result.get("suggested_tailwind_classes") or "w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold text-base shadow-md hover:shadow-lg transition flex items-center justify-center gap-2",
                 "css": "",
-                "file_hint": "src/components/SubmitButton.jsx"
+                "file_hint": inferred_file
             }
 
         fix_record = {
@@ -298,7 +331,7 @@ async def run_self_healing_loop(run_id: str, base_url: str, page_name: str = "ch
     }
 
     print(f"\n{'=' * 70}")
-    print(f">>> STARTING LANGGRAPH SELF-HEALING LOOP: RUN '{run_id}' <<<")
+    print(f">>> STARTING LANGGRAPH SELF-HEALING LOOP: RUN '{run_id}' (PAGE: {page_name}) <<<")
     print(f"{'=' * 70}")
 
     final_state = await self_healing_graph.ainvoke(initial_state)

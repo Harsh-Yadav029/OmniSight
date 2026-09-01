@@ -1,6 +1,7 @@
 import sys
 import os
 import asyncio
+from pathlib import Path
 
 # Ensure Windows uses ProactorEventLoop for Playwright Chromium subprocess support
 if sys.platform == "win32":
@@ -18,6 +19,7 @@ from dotenv import load_dotenv
 
 from navigator.navigate_checkout import run_navigation
 from orchestrator.graph import run_self_healing_loop
+from orchestrator.extract_fix import infer_source_file
 from vlm_engine.groq_helper import summarize_for_pr
 from orchestrator.github_integration import create_fix_pr, perform_pr_action
 
@@ -62,16 +64,16 @@ class PRActionPayload(BaseModel):
 async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, internal_key: str):
     """
     Background orchestrator executing the full autonomous testing & self-healing pipeline:
-    1. Multi-viewport Playwright navigation (Mobile, Tablet, Desktop)
-    2. LangGraph iterative self-healing loop
+    1. Multi-viewport Playwright navigation across all pages (Products, Cart, Checkout)
+    2. Multi-page visual audit & LangGraph iterative self-healing loop
     3. Groq PR summarization
-    4. GitHub Pull Request creation and backend persistence
+    4. GitHub Pull Request creation for the specific healed component
     """
     print(f"\n[Webhook Gateway] Starting autonomous audit for run_id '{run_id}' against {base_url}...")
     try:
         # Step 1: Multi-viewport snapshot capture
         manifest = await run_navigation(base_url=base_url, run_id=run_id)
-        print(f"[Webhook Gateway] Initial snapshots captured for run '{run_id}'.")
+        print(f"[Webhook Gateway] Snapshots captured for {len(manifest)} pages.")
 
         # Notify backend of screenshot capture
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -81,19 +83,35 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
                 json={"status": "screenshots_captured"}
             )
 
-        # Step 2: Run LangGraph Self-Healing Loop on checkout flow
-        final_state = await run_self_healing_loop(run_id=run_id, base_url=base_url, page_name="checkout")
+        # Step 2: Determine target page with potential visual defects
+        pages_to_audit = ["checkout", "cart", "product_listing"]
+        target_page = "checkout"
+        for page_name in pages_to_audit:
+            if page_name in manifest:
+                target_page = page_name
+                break
+
+        # Run LangGraph Self-Healing Loop on the target page
+        final_state = await run_self_healing_loop(run_id=run_id, base_url=base_url, page_name=target_page)
 
         # Step 3: If resolved, create GitHub PR and save record
         if final_state.get("resolved"):
             print(f"[Webhook Gateway] Visual bug resolved! Generating Groq summary & GitHub PR...")
             vlm_history = final_state.get("vlm_history", [])
             latest_vlm = vlm_history[-1] if vlm_history else {
-                "issue_type": "hidden button",
-                "description": "Submit button clipped on mobile viewport.",
+                "issue_type": "visual defect",
+                "description": "Visual layout regression resolved and verified.",
                 "suggested_tailwind_classes": "w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2",
                 "affected_selector": "#submit-order-button"
             }
+
+            # Infer source file dynamically based on selector & issue context (Navbar.jsx, ProductCard.jsx, SubmitButton.jsx, etc.)
+            inferred_file = infer_source_file(
+                latest_vlm.get("affected_selector", ""),
+                latest_vlm.get("description", ""),
+                latest_vlm.get("issue_type", "")
+            )
+            file_path = f"test-target-app/{inferred_file.replace('\\', '/').lstrip('/')}"
 
             # Generate PR description and commit message via Groq
             pr_summary = await summarize_for_pr(latest_vlm, vlm_history)
@@ -105,9 +123,9 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
                     "issue_type": latest_vlm.get("issue_type", "visual defect"),
                     "commit_message": pr_summary.get("commit_message", "fix(ui): resolve visual regression"),
                     "pr_description": pr_summary.get("pr_description", "Automated visual fix applied."),
-                    "file_path": "test-target-app/src/components/SubmitButton.jsx",
-                    "screenshot_before": f"runs/{run_id}/screenshots/checkout_375.png",
-                    "screenshot_after": final_state.get("screenshot_path", f"runs/{run_id}/screenshots/checkout_375.png"),
+                    "file_path": file_path,
+                    "screenshot_before": f"runs/{run_id}/screenshots/{target_page}_375.png",
+                    "screenshot_after": final_state.get("screenshot_path", f"runs/{run_id}/screenshots/{target_page}_375.png"),
                     "vlm_details": latest_vlm
                 }
             )
