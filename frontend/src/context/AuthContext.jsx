@@ -4,13 +4,23 @@ import { api } from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const getStoredToken = () => {
+    const t = localStorage.getItem('omnisight_jwt_token');
+    if (!t || t === 'undefined' || t === 'null') {
+      localStorage.removeItem('omnisight_jwt_token');
+      return null;
+    }
+    return t;
+  };
+
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('omnisight_jwt_token'));
+  const [token, setToken] = useState(getStoredToken());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      if (token) {
+      const storedToken = getStoredToken();
+      if (storedToken) {
         try {
           const currentUser = await api.getMe();
           setUser(currentUser);
@@ -26,9 +36,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const data = await api.login(email, password);
-    setToken(data.accessToken);
+    const validToken = data.accessToken || data.token;
+    setToken(validToken);
     setUser(data.user);
-    localStorage.setItem('omnisight_jwt_token', data.accessToken);
+    if (validToken) {
+      localStorage.setItem('omnisight_jwt_token', validToken);
+    }
     return data.user;
   };
 

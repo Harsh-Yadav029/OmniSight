@@ -99,6 +99,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         {
           user: loggedInUser,
           token,
+          accessToken: token,
         },
         'User logged in successfully'
       )
@@ -134,6 +135,7 @@ export const loginUser = asyncHandler(async (req, res) => {
           {
             user: demoUser,
             token,
+            accessToken: token,
           },
           'Logged in using demo credentials'
         )
