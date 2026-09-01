@@ -63,17 +63,10 @@ export const RunsList = () => {
   const handleTriggerRun = async () => {
     setTriggering(true);
     try {
-      await fetch('http://localhost:8000/webhook/build-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repo: 'OmniSight',
-          branch: 'main',
-          commitSha: Math.random().toString(36).substring(2, 9)
-        })
-      });
-      setTimeout(() => { refetch(); setTriggering(false); }, 1200);
+      await api.triggerNewRun();
+      setTimeout(() => { refetch(); setTriggering(false); }, 1500);
     } catch (e) {
+      console.error('Trigger run error:', e);
       refetch(); setTriggering(false);
     }
   };

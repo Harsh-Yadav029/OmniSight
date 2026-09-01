@@ -61,28 +61,40 @@ def _sync_run_navigation(base_url: str, run_id: str) -> dict:
 
         try:
             # 1. Product Listing Page
-            print(f"[Navigator] Navigating to Product Listing: {base_url}/")
-            page.goto(f"{base_url}/", wait_until="networkidle", timeout=15000)
-            page.wait_for_selector("#product-grid", timeout=8000)
-            manifest["product_listing"] = capture_page_snapshots_sync(page, "product_listing", output_dir)
+            try:
+                print(f"[Navigator] Navigating to Product Listing: {base_url}/")
+                page.goto(f"{base_url}/", wait_until="networkidle", timeout=15000)
+                page.wait_for_selector("#product-grid", timeout=8000)
+                manifest["product_listing"] = capture_page_snapshots_sync(page, "product_listing", output_dir)
+            except Exception as e:
+                print(f"[Navigator] Warning: Product listing navigation error: {e}")
 
-            # Add first product to cart
-            add_button = page.locator('button[id^="add-to-cart-"]').first
-            if add_button.count() > 0:
-                add_button.click()
-                page.wait_for_timeout(300)
+            # Add first product to cart if present
+            try:
+                add_button = page.locator('button[id^="add-to-cart-"]').first
+                if add_button.count() > 0:
+                    add_button.click()
+                    page.wait_for_timeout(400)
+            except Exception as e:
+                print(f"[Navigator] Warning: Add to cart interaction skipped: {e}")
 
             # 2. Cart Page
-            print(f"[Navigator] Navigating to Cart Page: {base_url}/cart")
-            page.goto(f"{base_url}/cart", wait_until="networkidle", timeout=15000)
-            page.wait_for_selector("#cart-page", timeout=8000)
-            manifest["cart"] = capture_page_snapshots_sync(page, "cart", output_dir)
+            try:
+                print(f"[Navigator] Navigating to Cart Page: {base_url}/cart")
+                page.goto(f"{base_url}/cart", wait_until="networkidle", timeout=15000)
+                page.wait_for_selector("#cart-page", timeout=8000)
+                manifest["cart"] = capture_page_snapshots_sync(page, "cart", output_dir)
+            except Exception as e:
+                print(f"[Navigator] Warning: Cart page navigation error: {e}")
 
             # 3. Checkout Page
-            print(f"[Navigator] Navigating to Checkout Page: {base_url}/checkout")
-            page.goto(f"{base_url}/checkout", wait_until="networkidle", timeout=15000)
-            page.wait_for_selector("#checkout-page", timeout=8000)
-            manifest["checkout"] = capture_page_snapshots_sync(page, "checkout", output_dir)
+            try:
+                print(f"[Navigator] Navigating to Checkout Page: {base_url}/checkout")
+                page.goto(f"{base_url}/checkout", wait_until="networkidle", timeout=15000)
+                page.wait_for_selector("#checkout-page", timeout=8000)
+                manifest["checkout"] = capture_page_snapshots_sync(page, "checkout", output_dir)
+            except Exception as e:
+                print(f"[Navigator] Warning: Checkout page navigation error: {e}")
 
         finally:
             browser.close()

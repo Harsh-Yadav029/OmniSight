@@ -1,4 +1,5 @@
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://omnisight-backend-4ina.onrender.com';
+const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL || 'https://omnisight-ml-service.onrender.com';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('omnisight_jwt_token');
@@ -69,5 +70,20 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Failed to update decision`);
     return data.data;
+  },
+
+  // Trigger New Autonomous Run via ML Service Webhook
+  async triggerNewRun() {
+    const res = await fetch(`${ML_SERVICE_URL}/webhook/build-event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        repo: 'Harsh-Yadav029/OmniSight',
+        branch: 'main',
+        commitSha: Math.random().toString(36).substring(2, 9)
+      })
+    });
+    const data = await res.json();
+    return data;
   }
 };
