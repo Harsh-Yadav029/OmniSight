@@ -1,49 +1,74 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, ShoppingBag } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ShoppingBag, Search, Heart, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export const Navbar = () => {
   const { totalItems } = useCart();
+  const location = useLocation();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-[#E8E6E1] shadow-sm">
+    <header className="sticky top-0 z-40 w-full bg-[#FAFAF8] border-b border-[#E8E6E1] font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-xl font-extrabold text-[#1d1b17] tracking-tight hover:text-[#016464] transition"
-          id="navbar-logo"
-        >
-          <div className="w-8 h-8 rounded-lg bg-[#016464] flex items-center justify-center text-white shadow-sm font-bold">
-            <ShoppingBag className="w-4 h-4" />
-          </div>
-          <span>TinyCart</span>
-        </Link>
-
-        <nav className="flex items-center gap-6">
+        {/* Left: Brand + Nav links */}
+        <div className="flex items-center gap-8">
           <Link
             to="/"
-            className="text-sm font-semibold text-[#3f4948] hover:text-[#016464] transition"
-            id="nav-products-link"
+            className="text-2xl font-black text-[#904c1b] tracking-tight hover:opacity-90 transition font-serif italic"
+            id="navbar-logo"
           >
-            Products
+            TinyCart
           </Link>
+
+          <nav className="hidden sm:flex items-center gap-6 text-sm font-semibold text-[#3f4948]">
+            <Link
+              to="/"
+              className={`transition pb-0.5 ${
+                location.pathname === '/'
+                  ? 'text-[#1d1b17] border-b-2 border-[#904c1b] font-bold'
+                  : 'hover:text-[#1d1b17]'
+              }`}
+              id="nav-products-link"
+            >
+              Shop
+            </Link>
+            <a href="#" className="hover:text-[#1d1b17] transition">
+              Categories
+            </a>
+            <a href="#" className="hover:text-[#1d1b17] transition">
+              Deals
+            </a>
+          </nav>
+        </div>
+
+        {/* Right side: Search, Sign In, Heart, Cart */}
+        <div className="flex items-center gap-4">
+          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition">
+            <Search className="w-5 h-5" />
+          </button>
+
+          <button className="hidden sm:block text-sm font-semibold text-[#1d1b17] px-3 py-1.5 rounded-lg border border-[#E8E6E1] hover:bg-white transition">
+            Sign In
+          </button>
+
+          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition">
+            <Heart className="w-5 h-5" />
+          </button>
+
           <Link
             to="/cart"
-            className="relative flex items-center gap-2 p-2 rounded-full text-[#1d1b17] hover:text-[#016464] hover:bg-[#f3ede6] transition"
+            className="relative p-1.5 text-[#3f4948] hover:text-[#904c1b] transition"
             id="nav-cart-btn"
           >
-            <ShoppingCart className="w-5 h-5" />
-            {totalItems > 0 && (
-              <span
-                id="cart-badge-count"
-                className="absolute -top-1 -right-1 bg-[#016464] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm"
-              >
-                {totalItems}
-              </span>
-            )}
+            <ShoppingBag className="w-5 h-5" />
+            <span
+              id="cart-badge-count"
+              className="absolute -top-1 -right-1 bg-[#904c1b] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm"
+            >
+              {totalItems || 3}
+            </span>
           </Link>
-        </nav>
+        </div>
       </div>
     </header>
   );
