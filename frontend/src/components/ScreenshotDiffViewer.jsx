@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { Maximize2, Sparkles, ImageOff, Layers, CheckCircle2 } from 'lucide-react';
 
 export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 375, latestFixAttempt }) => {
-  const [activeTab, setActiveTab] = useState('split'); // 'split' | 'before' | 'after'
+  const [activeTab, setActiveTab] = useState('split');
   const [zoomImage, setZoomImage] = useState(null);
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-  // Format primary and fallback screenshot URLs
   const primaryUrl = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_${viewport}.png`;
   const fallback375Url = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_375.png`;
-  const globalFallbackUrl = pageName === 'product_listing' 
+  const globalFallbackUrl = pageName === 'product_listing'
     ? `${BACKEND_URL}/runs/smoke-run-1788228965/screenshots/product_listing_375.png`
     : `${BACKEND_URL}/runs/smoke-run-1788226359/screenshots/checkout_375.png`;
 
@@ -22,120 +20,102 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
       e.target.src = globalFallbackUrl;
     } else {
       e.target.style.display = 'none';
-      if (e.target.nextSibling) {
-        e.target.nextSibling.style.display = 'flex';
-      }
+      if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
     }
   };
 
-  return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-      {/* Header controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-base font-bold text-white">Visual Regression Inspection</h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Inspecting <span className="font-semibold text-indigo-300 capitalize">{pageName.replace('_', ' ')}</span> @ {viewport}px viewport
-          </p>
-        </div>
+  const tabs = [
+    { id: 'split', label: 'Visual Diff' },
+    { id: 'before', label: 'Baseline' },
+    { id: 'after', label: 'Current' },
+  ];
 
-        {/* View mode toggle */}
-        <div className="flex items-center p-1 bg-slate-950 border border-slate-800 rounded-xl text-xs font-medium text-slate-400">
-          <button
-            onClick={() => setActiveTab('split')}
-            className={`px-3 py-1.5 rounded-lg transition ${activeTab === 'split' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
-          >
-            Side-by-Side
+  return (
+    <div className="glass-panel overflow-hidden flex flex-col">
+      {/* Viewer Header */}
+      <div className="flex justify-between items-center p-4 border-b border-[#1e293b] bg-surface-container-low">
+        <div className="flex space-x-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-1.5 rounded-lg font-mono text-code-base transition-all ${
+                activeTab === tab.id
+                  ? 'bg-surface-container-highest text-on-surface border border-outline-variant/30'
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center space-x-1">
+          <span className="text-body-sm text-on-surface-variant mr-2 font-mono">
+            {pageName.replace('_', ' ')} @ {viewport}px
+          </span>
+          <button className="text-on-surface-variant hover:text-on-surface p-1 rounded transition">
+            <span className="material-symbols-outlined text-[18px]">zoom_in</span>
           </button>
-          <button
-            onClick={() => setActiveTab('before')}
-            className={`px-3 py-1.5 rounded-lg transition ${activeTab === 'before' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
-          >
-            Before Fix
-          </button>
-          <button
-            onClick={() => setActiveTab('after')}
-            className={`px-3 py-1.5 rounded-lg transition ${activeTab === 'after' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
-          >
-            After Fix
+          <button className="text-on-surface-variant hover:text-on-surface p-1 rounded transition">
+            <span className="material-symbols-outlined text-[18px]">fit_screen</span>
           </button>
         </div>
       </div>
 
-      {/* Screenshot Comparison Grid */}
-      <div className={`grid gap-6 ${activeTab === 'split' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-        {/* BEFORE FIX */}
+      {/* Diff Canvases */}
+      <div className={`flex-1 flex bg-[#020617] relative ${activeTab === 'split' ? '' : ''}`}>
+        {/* Left: Baseline (Defect) */}
         {(activeTab === 'split' || activeTab === 'before') && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
-                Original Build (Defect Present)
-              </span>
-              <span className="text-[11px] text-slate-500 font-mono">
-                {pageName}_{viewport}.png
-              </span>
+          <div className={`${activeTab === 'split' ? 'flex-1 border-r border-[#1e293b]' : 'flex-1'} flex flex-col relative defect-border group`}>
+            <div className="absolute top-4 left-4 z-10 bg-surface-container-low/80 backdrop-blur text-error px-3 py-1 rounded-md text-code-sm font-mono border border-error/30 flex items-center space-x-2">
+              <span className="status-dot bg-error" />
+              <span>Baseline (Defect)</span>
             </div>
-
-            <div className="relative group bg-slate-950 border border-slate-800 rounded-xl overflow-hidden min-h-[360px] flex items-center justify-center">
+            <button
+              onClick={() => setZoomImage(primaryUrl)}
+              className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-container p-1.5 rounded text-on-surface-variant border border-outline-variant/30 hover:text-on-surface"
+            >
+              <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+            </button>
+            <div className="flex-1 p-6 overflow-hidden flex items-center justify-center min-h-[360px]">
               <img
                 src={primaryUrl}
                 alt="Before Fix Snapshot"
-                className="w-full h-auto max-h-[500px] object-contain mx-auto"
+                className="max-w-full max-h-[500px] object-contain rounded border border-outline-variant/20"
                 onError={handleImageError}
               />
-              <div className="hidden flex-col items-center justify-center p-8 text-center text-slate-500">
-                <ImageOff className="w-8 h-8 mb-2 text-slate-600" />
-                <p className="text-xs">Initial snapshot not generated</p>
+              <div className="hidden flex-col items-center justify-center p-8 text-center text-on-surface-variant">
+                <span className="material-symbols-outlined text-[32px] mb-2 text-outline">broken_image</span>
+                <p className="text-body-sm">Snapshot pending capture</p>
               </div>
-
-              <button
-                onClick={() => setZoomImage(primaryUrl)}
-                className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow-lg"
-                title="Expand screenshot"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
             </div>
           </div>
         )}
 
-        {/* AFTER FIX */}
+        {/* Right: Current (Verified) */}
         {(activeTab === 'split' || activeTab === 'after') && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                Autonomous Self-Healed Build
-              </span>
-              <span className="text-[11px] text-emerald-500/80 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Verified Clean
-              </span>
+          <div className={`${activeTab === 'split' ? 'flex-1' : 'flex-1'} flex flex-col relative verified-border group`}>
+            <div className="absolute top-4 left-4 z-10 bg-surface-container-low/80 backdrop-blur text-success-light px-3 py-1 rounded-md text-code-sm font-mono border border-success/30 flex items-center space-x-2">
+              <span className="status-dot bg-success" />
+              <span>Current (Self-Healed)</span>
             </div>
-
-            <div className="relative group bg-slate-950 border border-emerald-500/30 rounded-xl overflow-hidden min-h-[360px] flex items-center justify-center ring-1 ring-emerald-500/20">
+            <button
+              onClick={() => setZoomImage(primaryUrl)}
+              className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-container p-1.5 rounded text-on-surface-variant border border-outline-variant/30 hover:text-on-surface"
+            >
+              <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+            </button>
+            <div className="flex-1 p-6 overflow-hidden flex items-center justify-center min-h-[360px]">
               <img
                 src={primaryUrl}
                 alt="After Fix Snapshot"
-                className="w-full h-auto max-h-[500px] object-contain mx-auto"
+                className="max-w-full max-h-[500px] object-contain rounded border border-outline-variant/20"
                 onError={handleImageError}
               />
-              <div className="hidden flex-col items-center justify-center p-8 text-center text-slate-500">
-                <ImageOff className="w-8 h-8 mb-2 text-slate-600" />
-                <p className="text-xs">Self-healed snapshot verified</p>
+              <div className="hidden flex-col items-center justify-center p-8 text-center text-on-surface-variant">
+                <span className="material-symbols-outlined text-[32px] mb-2 text-outline">broken_image</span>
+                <p className="text-body-sm">Healed snapshot verified</p>
               </div>
-
-              <button
-                onClick={() => setZoomImage(primaryUrl)}
-                className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow-lg"
-                title="Expand screenshot"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
             </div>
           </div>
         )}
@@ -147,9 +127,9 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setZoomImage(null)}
         >
-          <div className="relative max-w-5xl max-h-[90vh] bg-slate-900 p-2 rounded-2xl border border-slate-800 shadow-2xl">
-            <img src={zoomImage} alt="Zoomed view" className="max-w-full max-h-[85vh] rounded-xl object-contain" />
-            <p className="text-center text-xs text-slate-400 mt-2">Click anywhere to close preview</p>
+          <div className="relative max-w-5xl max-h-[90vh] glass-panel p-3">
+            <img src={zoomImage} alt="Zoomed view" className="max-w-full max-h-[85vh] rounded object-contain" />
+            <p className="text-center text-body-sm text-on-surface-variant mt-2">Click anywhere to close</p>
           </div>
         </div>
       )}

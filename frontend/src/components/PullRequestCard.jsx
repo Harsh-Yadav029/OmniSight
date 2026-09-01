@@ -1,152 +1,127 @@
 import React, { useState } from 'react';
-import { GitPullRequest, ExternalLink, Check, X, AlertTriangle, MessageSquare } from 'lucide-react';
 
 export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
-  const [loading, setLoading] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [warningMessage, setWarningMessage] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!pullRequest) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <GitPullRequest className="w-8 h-8 mx-auto mb-2 text-slate-600 animate-pulse" />
-        <h4 className="text-sm font-semibold text-slate-300">Pull Request Awaiting Verification</h4>
-        <p className="text-xs text-slate-500 mt-1">Once visual regressions are healed, a GitHub Pull Request will be opened automatically.</p>
+      <div className="glass-panel p-5">
+        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2">
+          <span className="material-symbols-outlined text-[20px] text-primary">merge</span>
+          <span>Pull Request</span>
+        </h3>
+        <p className="text-body-sm text-on-surface-variant mt-2">No PR associated with this run yet.</p>
       </div>
     );
   }
 
-  const currentDecision = pullRequest.decision || 'pending';
+  const isPending = !pullRequest.decision || pullRequest.decision === 'pending';
 
-  const handleAction = async (decision, reason = '') => {
-    setLoading(true);
-    setWarningMessage(null);
+  const handleDecision = async (decision) => {
+    setSubmitting(true);
     try {
-      const res = await onDecision(decision, reason);
-      if (res?.data?.warning || res?.warning) {
-        setWarningMessage(res?.data?.warning || res?.warning);
-      }
-      setShowRejectModal(false);
+      await onDecision(decision, rejectionReason);
     } catch (err) {
-      console.error('Failed to update PR decision:', err);
-    } finally {
-      setLoading(false);
+      console.error('Decision error:', err);
     }
+    setSubmitting(false);
+    setShowRejectInput(false);
+    setRejectionReason('');
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+    <div className="glass-panel p-5 space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GitPullRequest className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-white">Automated GitHub Pull Request</h3>
-        </div>
-
-        {/* Decision Badge */}
-        {currentDecision === 'approved' && (
-          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5" />
-            Approved by QA
-          </span>
-        )}
-        {currentDecision === 'rejected' && (
-          <span className="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-xs font-bold flex items-center gap-1.5">
-            <X className="w-3.5 h-3.5" />
-            Rejected by QA (PR Closed)
-          </span>
-        )}
-        {currentDecision === 'pending' && (
-          <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full text-xs font-bold animate-pulse">
-            Pending QA Approval
-          </span>
-        )}
+        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2">
+          <span className="material-symbols-outlined text-[20px] text-primary">merge</span>
+          <span>Automated GitHub Pull Request</span>
+        </h3>
+        <span className={`text-label-caps px-2.5 py-1 rounded-full border ${
+          isPending
+            ? 'bg-warning/10 text-warning-light border-warning/30'
+            : pullRequest.decision === 'approved'
+              ? 'bg-success/10 text-success-light border-success/30'
+              : 'bg-error/10 text-error-light border-error/30'
+        }`}>
+          {isPending ? 'Pending QA Approval' : pullRequest.decision === 'approved' ? 'Approved' : 'Rejected'}
+        </span>
       </div>
 
-      <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <p className="text-xs text-slate-400">Target Fix Branch:</p>
-            <code className="text-xs font-mono text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-              {pullRequest.branchName || `omnisight/fix-${runId}`}
-            </code>
-          </div>
-
+      {/* PR Details */}
+      <div className="recessed-panel p-3 space-y-2">
+        <div className="text-code-sm text-on-surface-variant">
+          Target Fix Branch:
+        </div>
+        <div className="flex items-center justify-between">
+          <code className="font-mono text-code-base text-tertiary-dim break-all">
+            {pullRequest.branchName || `omnisight/fix-${runId}`}
+          </code>
           {pullRequest.prUrl && (
             <a
               href={pullRequest.prUrl}
               target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 transition self-start sm:self-auto"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-code-sm font-semibold hover:shadow-glow-primary transition-all shrink-0 ml-3"
             >
               <span>View Pull Request</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="material-symbols-outlined text-[14px]">open_in_new</span>
             </a>
           )}
         </div>
       </div>
 
-      {/* Non-blocking Notice Banner */}
-      {warningMessage && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2 text-xs text-amber-300">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>Notice: {warningMessage}</span>
-        </div>
-      )}
+      {/* Resolution Actions */}
+      {isPending && (
+        <div className="space-y-3 pt-2 border-t border-[#1e293b]">
+          <h4 className="text-body-sm font-semibold text-on-surface-variant">Resolution Actions</h4>
 
-      {/* Action Buttons for QA Manager */}
-      {currentDecision === 'pending' && !showRejectModal && (
-        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-3">
           <button
-            disabled={loading}
-            onClick={() => handleAction('approved')}
-            className="w-full sm:w-1/2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2"
+            onClick={() => handleDecision('approved')}
+            disabled={submitting}
+            className="w-full bg-success/10 hover:bg-success/20 text-success-light border border-success/30 text-body-base font-semibold py-2.5 rounded-lg flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
           >
-            <Check className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">check_circle</span>
             <span>Approve Fix</span>
           </button>
 
-          <button
-            disabled={loading}
-            onClick={() => setShowRejectModal(true)}
-            className="w-full sm:w-1/2 py-2.5 px-4 bg-rose-600/10 hover:bg-rose-600/20 active:bg-rose-600/30 disabled:opacity-50 text-rose-400 border border-rose-500/30 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2"
-          >
-            <X className="w-4 h-4" />
-            <span>Reject Fix</span>
-          </button>
-        </div>
-      )}
-
-      {/* Reject Reason Form */}
-      {showRejectModal && (
-        <div className="pt-2 border-t border-slate-800/80 space-y-3">
-          <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5 text-rose-400" />
-            <span>Rejection Reason (Optional comment for GitHub PR):</span>
-          </label>
-          <textarea
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="e.g. Unwanted layout shift on tablet viewport..."
-            rows={2}
-            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition resize-none"
-          />
-          <div className="flex items-center gap-2">
+          {!showRejectInput ? (
             <button
-              disabled={loading}
-              onClick={() => handleAction('rejected', rejectReason)}
-              className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold text-xs rounded-xl transition"
+              onClick={() => setShowRejectInput(true)}
+              disabled={submitting}
+              className="w-full bg-transparent border border-[#1e293b] text-on-surface-variant hover:text-error-light hover:border-error/30 hover:bg-error/5 text-body-base font-semibold py-2.5 rounded-lg flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
             >
-              {loading ? 'Closing PR...' : 'Confirm Rejection & Close PR'}
+              <span className="material-symbols-outlined text-[18px]">cancel</span>
+              <span>Reject Fix</span>
             </button>
-            <button
-              disabled={loading}
-              onClick={() => setShowRejectModal(false)}
-              className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition"
-            >
-              Cancel
-            </button>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Reason for rejection (optional)"
+                className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-2 text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-error/50 transition"
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleDecision('rejected')}
+                  disabled={submitting}
+                  className="flex-1 bg-error/10 text-error-light border border-error/30 text-body-sm font-semibold py-2 rounded-lg hover:bg-error/20 transition disabled:opacity-50"
+                >
+                  Confirm Reject
+                </button>
+                <button
+                  onClick={() => { setShowRejectInput(false); setRejectionReason(''); }}
+                  className="px-4 text-on-surface-variant hover:text-on-surface text-body-sm py-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-highest/30 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

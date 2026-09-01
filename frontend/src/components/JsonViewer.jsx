@@ -1,54 +1,59 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Copy, Check, Terminal } from 'lucide-react';
 
-export const JsonViewer = ({ data, title = 'VLM Raw Inspection Output (JSON)' }) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const JsonViewer = ({ data, title = 'Output' }) => {
+  const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   const jsonString = JSON.stringify(data, null, 2);
 
-  const handleCopy = (e) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(jsonString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Syntax-colored JSON rendering
+  const colorize = (str) => {
+    return str
+      .replace(/"([^"]+)":/g, '<span class="text-success-light">"$1"</span>:')
+      .replace(/: "(.*?)"/g, ': <span class="text-primary-dim">"$1"</span>')
+      .replace(/: (true|false)/g, ': <span class="text-tertiary-dim">$1</span>')
+      .replace(/: (\d+)/g, ': <span class="text-warning-light">$1</span>')
+      .replace(/: (null)/g, ': <span class="text-error-light">$1</span>');
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between bg-slate-900/90 hover:bg-slate-800/80 cursor-pointer transition text-left select-none"
-      >
-        <div className="flex items-center gap-2.5">
-          <Terminal className="w-4 h-4 text-indigo-400" />
-          <span className="text-sm font-bold text-slate-200">{title}</span>
-        </div>
-
-        <div className="flex items-center gap-3">
+    <div className="glass-panel overflow-hidden">
+      {/* Header */}
+      <div className="p-3 border-b border-[#1e293b] flex items-center justify-between bg-surface-container-low">
+        <h3 className="font-mono text-code-base text-on-surface-variant flex items-center space-x-2">
+          <span className="material-symbols-outlined text-[16px]">terminal</span>
+          <span>{title}</span>
+        </h3>
+        <div className="flex items-center space-x-2">
           <button
-            type="button"
             onClick={handleCopy}
-            className="p-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition flex items-center gap-1"
-            title="Copy JSON"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 text-code-sm font-mono transition"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="text-[11px]">{copied ? 'Copied!' : 'Copy'}</span>
+            <span className="material-symbols-outlined text-[14px]">{copied ? 'check' : 'content_copy'}</span>
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
-
-          {isOpen ? (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-on-surface-variant hover:text-on-surface p-1 rounded transition"
+          >
+            <span className="material-symbols-outlined text-[18px]">{collapsed ? 'expand_more' : 'expand_less'}</span>
+          </button>
         </div>
       </div>
 
-      {isOpen && (
-        <div className="p-4 bg-slate-950 border-t border-slate-800/80">
-          <pre className="p-4 bg-slate-900/80 rounded-xl text-xs font-mono text-emerald-400 border border-slate-800 overflow-x-auto max-h-96">
-            {jsonString}
-          </pre>
+      {/* Body */}
+      {!collapsed && (
+        <div className="recessed-panel m-3 p-4 overflow-x-auto max-h-[400px] overflow-y-auto">
+          <pre
+            className="font-mono text-code-sm leading-relaxed whitespace-pre-wrap break-words"
+            dangerouslySetInnerHTML={{ __html: colorize(jsonString) }}
+          />
         </div>
       )}
     </div>

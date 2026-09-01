@@ -1,20 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  GitBranch, 
-  GitCommit, 
-  Clock, 
-  ArrowRight, 
-  Search, 
-  Filter, 
-  Layers, 
-  CheckCircle2, 
-  Wrench, 
-  RefreshCw,
-  Eye,
-  Play
-} from 'lucide-react';
 import { api } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 
@@ -23,12 +9,11 @@ export const RunsList = () => {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [triggering, setTriggering] = useState(false);
 
-  // React Query fetching runs with 5-second polling on in-progress runs
   const { data: runs = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['runs'],
     queryFn: () => api.getRuns(),
     refetchInterval: (query) => {
-      const activeRuns = query.state.data?.some((r) => 
+      const activeRuns = query.state.data?.some((r) =>
         ['pending', 'analyzing', 'fix_applied', 'screenshots_captured'].includes(r.status)
       );
       return activeRuns ? 5000 : false;
@@ -38,7 +23,6 @@ export const RunsList = () => {
   const handleTriggerRun = async () => {
     setTriggering(true);
     try {
-      // Trigger build event webhook directly to ML-Service
       await fetch('http://localhost:8000/webhook/build-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,201 +32,184 @@ export const RunsList = () => {
           commitSha: Math.random().toString(36).substring(2, 9)
         })
       });
-      setTimeout(() => {
-        refetch();
-        setTriggering(false);
-      }, 1200);
+      setTimeout(() => { refetch(); setTriggering(false); }, 1200);
     } catch (e) {
-      console.warn('Webhook dispatch notice:', e);
-      refetch();
-      setTriggering(false);
+      refetch(); setTriggering(false);
     }
   };
 
   const filteredRuns = runs.filter((run) => {
-    const matchesSearch = 
+    const matchesSearch =
       (run.repo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (run.branch || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (run.commitSha || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (run._id || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = 
-      statusFilter === 'ALL' || 
+    const matchesStatus =
+      statusFilter === 'ALL' ||
       run.status === statusFilter ||
-      (statusFilter === 'pr_created' && (run.status === 'verified' || run.status === 'pr_created' || run.status === 'completed'));
-
+      (statusFilter === 'pr_created' && ['verified', 'pr_created', 'completed'].includes(run.status));
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate high-level summary metrics
   const totalRuns = runs.length;
-  const verifiedRuns = runs.filter((r) => r.status === 'verified' || r.status === 'pr_created' || r.status === 'completed').length;
+  const verifiedRuns = runs.filter((r) => ['verified', 'pr_created', 'completed'].includes(r.status)).length;
   const activeRuns = runs.filter((r) => ['pending', 'analyzing', 'fix_applied', 'screenshots_captured'].includes(r.status)).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Banner & Stats */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Build Regression Runs
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Automated multi-viewport visual audits, Gemini defect analysis, and self-healed pull requests.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
+    <div className="flex-1 flex flex-col min-w-0">
+      {/* Top App Bar */}
+      <header className="bg-canvas/80 backdrop-blur-md border-b border-outline-variant/30 flex justify-between items-center w-full px-6 h-16 shrink-0 sticky top-0 z-50">
+        <h2 className="text-headline-md font-bold text-on-surface">Build History</h2>
+        <div className="flex items-center space-x-3">
           <button
             onClick={handleTriggerRun}
             disabled={triggering}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition"
+            className="flex items-center space-x-2 px-4 py-2 bg-primary text-on-primary text-body-sm font-semibold rounded-xl hover:shadow-glow-primary transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
+            <span className="material-symbols-outlined text-[18px]">{triggering ? 'sync' : 'play_arrow'}</span>
             <span>{triggering ? 'Triggering...' : 'Trigger Visual Audit'}</span>
           </button>
-
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition"
+            className="flex items-center space-x-2 px-3 py-2 bg-surface-container border border-outline-variant/30 text-on-surface-variant text-body-sm font-semibold rounded-xl hover:text-on-surface transition disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-indigo-400' : ''}`} />
+            <span className={`material-symbols-outlined text-[18px] ${isFetching ? 'animate-spin' : ''}`}>sync</span>
             <span>{isFetching ? 'Syncing...' : 'Refresh'}</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Total Build Runs</span>
-            <Layers className="w-4 h-4 text-indigo-400" />
+      {/* Content */}
+      <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm font-semibold text-on-surface-variant">Total Build Runs</span>
+              <span className="material-symbols-outlined text-[20px] text-primary">layers</span>
+            </div>
+            <p className="text-display-lg font-extrabold text-on-surface mt-2">{totalRuns}</p>
           </div>
-          <p className="text-2xl font-extrabold text-white mt-2">{totalRuns}</p>
-        </div>
-
-        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-400">Verified & Healed</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm font-semibold text-success-light">Verified & Healed</span>
+              <span className="material-symbols-outlined text-[20px] text-success" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            </div>
+            <p className="text-display-lg font-extrabold text-on-surface mt-2">{verifiedRuns}</p>
           </div>
-          <p className="text-2xl font-extrabold text-white mt-2">{verifiedRuns}</p>
-        </div>
-
-        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-purple-400">Active Pipelines</span>
-            <Wrench className="w-4 h-4 text-purple-400" />
+          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm font-semibold text-secondary">Active Pipelines</span>
+              <span className="material-symbols-outlined text-[20px] text-secondary">auto_fix_high</span>
+            </div>
+            <p className="text-display-lg font-extrabold text-on-surface mt-2">{activeRuns}</p>
           </div>
-          <p className="text-2xl font-extrabold text-white mt-2">{activeRuns}</p>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 bg-slate-900/40 border border-slate-800 rounded-2xl">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search runs by commit, branch, or repo..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
-          />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-300 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="verified">Verified & Healed</option>
-            <option value="pr_created">PR Created</option>
-            <option value="analyzing">VLM Analyzing</option>
-            <option value="fix_applied">Fix Applied</option>
-            <option value="screenshots_captured">Screenshots Captured</option>
-            <option value="pending">Pending</option>
-          </select>
+        {/* Search & Filter */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 glass-panel p-4">
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined text-[18px] text-outline absolute left-3.5 top-1/2 -translate-y-1/2">search</span>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search runs by commit, branch, or repo..."
+              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/30 rounded-xl text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary/50 focus:shadow-glow-primary transition font-sans"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="material-symbols-outlined text-[18px] text-outline">filter_list</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3 py-2.5 text-body-sm font-medium text-on-surface-variant focus:outline-none focus:border-primary/50"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="verified">Verified & Healed</option>
+              <option value="pr_created">PR Created</option>
+              <option value="analyzing">AI Analyzing</option>
+              <option value="fix_applied">Fix Applied</option>
+              <option value="screenshots_captured">Screenshots Captured</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      {/* Runs Table / Cards */}
-      {isLoading ? (
-        <div className="p-12 text-center text-slate-400 space-y-3">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-400" />
-          <p className="text-sm font-semibold">Loading build runs...</p>
-        </div>
-      ) : filteredRuns.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900/40 border border-slate-800 rounded-2xl text-slate-400 space-y-3">
-          <Eye className="w-8 h-8 mx-auto text-slate-600" />
-          <h3 className="text-base font-bold text-slate-200">No Build Runs Found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Click the "Trigger Visual Audit" button above or run `python scripts/smoke_test.py` to initiate visual regression testing.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
-                <tr>
-                  <th className="px-6 py-4">Build Run ID</th>
-                  <th className="px-6 py-4">Branch & Repository</th>
-                  <th className="px-6 py-4">Commit SHA</th>
-                  <th className="px-6 py-4">Lifecycle Status</th>
-                  <th className="px-6 py-4">Timestamp</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/80">
-                {filteredRuns.map((run) => (
-                  <tr key={run._id} className="hover:bg-slate-800/40 transition group">
-                    <td className="px-6 py-4 font-mono font-bold text-slate-200">
-                      {String(run._id).substring(0, 18)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 font-semibold text-white">
-                        <GitBranch className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                        <span>{run.branch || 'main'}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{run.repo || 'Harsh-Yadav029/OmniSight'}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1 font-mono text-slate-300 bg-slate-950 px-2 py-1 rounded border border-slate-800 w-fit">
-                        <GitCommit className="w-3 h-3 text-slate-500" />
-                        <span>{(run.commitSha || 'unknown').substring(0, 7)}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={run.status} />
-                    </td>
-                    <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
-                      <div className="flex items-center gap-1 text-[11px]">
-                        <Clock className="w-3 h-3 text-slate-500" />
-                        <span>{run.createdAt ? new Date(run.createdAt).toLocaleTimeString() : 'Just now'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link
-                        to={`/runs/${run._id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 transition group-hover:scale-105"
-                      >
-                        <span>View Details</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </td>
+        {/* Runs Table */}
+        {isLoading ? (
+          <div className="p-12 text-center text-on-surface-variant space-y-3">
+            <span className="material-symbols-outlined text-[32px] animate-spin text-primary">progress_activity</span>
+            <p className="text-body-base font-semibold">Loading build runs...</p>
+          </div>
+        ) : filteredRuns.length === 0 ? (
+          <div className="p-12 text-center glass-panel text-on-surface-variant space-y-3">
+            <span className="material-symbols-outlined text-[32px] text-outline">visibility_off</span>
+            <h3 className="text-title-base font-bold text-on-surface">No Build Runs Found</h3>
+            <p className="text-body-sm text-on-surface-variant max-w-sm mx-auto">
+              Click "Trigger Visual Audit" or run <code className="font-mono text-primary-dim">python scripts/smoke_test.py</code>
+            </p>
+          </div>
+        ) : (
+          <div className="glass-panel overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-body-sm">
+                <thead className="bg-surface-container-lowest border-b border-[#1e293b]">
+                  <tr className="text-label-caps text-on-surface-variant uppercase tracking-wider">
+                    <th className="px-6 py-4">Build Run ID</th>
+                    <th className="px-6 py-4">Branch & Repository</th>
+                    <th className="px-6 py-4">Commit SHA</th>
+                    <th className="px-6 py-4">Lifecycle Status</th>
+                    <th className="px-6 py-4">Timestamp</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/15">
+                  {filteredRuns.map((run) => (
+                    <tr key={run._id} className="hover:bg-surface-container/50 transition group">
+                      <td className="px-6 py-4 font-mono text-code-base font-bold text-on-surface">
+                        {String(run._id).substring(0, 18)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-1.5 font-semibold text-on-surface text-body-sm">
+                          <span className="material-symbols-outlined text-[16px] text-primary">fork_right</span>
+                          <span>{run.branch || 'main'}</span>
+                        </div>
+                        <p className="text-code-sm text-on-surface-variant mt-0.5 font-mono">{run.repo || 'Harsh-Yadav029/OmniSight'}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="inline-flex items-center space-x-1 font-mono text-code-base text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20">
+                          <span className="material-symbols-outlined text-[14px] text-outline">commit</span>
+                          <span>{(run.commitSha || 'unknown').substring(0, 7)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={run.status} />
+                      </td>
+                      <td className="px-6 py-4 text-on-surface-variant whitespace-nowrap">
+                        <div className="flex items-center space-x-1 text-code-sm font-mono">
+                          <span className="material-symbols-outlined text-[14px] text-outline">schedule</span>
+                          <span>{run.createdAt ? new Date(run.createdAt).toLocaleTimeString() : 'Just now'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          to={`/runs/${run._id}`}
+                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-code-sm font-semibold hover:shadow-glow-primary transition-all group-hover:scale-105"
+                        >
+                          <span>Inspect</span>
+                          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

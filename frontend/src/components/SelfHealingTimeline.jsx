@@ -1,83 +1,76 @@
 import React from 'react';
-import { Wrench, CheckCircle2, XCircle, Code2, ArrowRight, Activity } from 'lucide-react';
 
 export const SelfHealingTimeline = ({ fixAttempts = [] }) => {
   if (!fixAttempts || fixAttempts.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <Activity className="w-8 h-8 mx-auto mb-2 text-slate-600 animate-pulse" />
-        <h4 className="text-sm font-semibold text-slate-300">Self-Healing Pipeline Standing By</h4>
-        <p className="text-xs text-slate-500 mt-1">Fix attempts and iterative patches will appear here in real time.</p>
+      <div className="glass-panel p-5">
+        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2 mb-3">
+          <span className="material-symbols-outlined text-[20px] text-secondary">auto_fix_high</span>
+          <span>Self-Healing History</span>
+        </h3>
+        <p className="text-body-sm text-on-surface-variant">No healing cycles recorded for this run.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-white">Self-Healing Iteration History</h3>
-        </div>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+    <div className="glass-panel p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2">
+          <span className="material-symbols-outlined text-[20px] text-secondary">auto_fix_high</span>
+          <span>Self-Healing Iteration History</span>
+        </h3>
+        <span className="text-label-caps text-on-surface-variant bg-surface-container-highest px-2.5 py-1 rounded-full border border-outline-variant/30">
           {fixAttempts.length} {fixAttempts.length === 1 ? 'Attempt' : 'Attempts'}
         </span>
       </div>
 
       <div className="space-y-4">
-        {fixAttempts.map((attempt, index) => {
-          const isResolved = attempt.resolved;
-          return (
-            <div
-              key={attempt._id || index}
-              className={`p-4 rounded-xl border transition ${
-                isResolved
-                  ? 'bg-emerald-950/20 border-emerald-500/30'
-                  : 'bg-slate-950/80 border-slate-800'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/30">
-                    #{attempt.attemptNumber || index + 1}
-                  </span>
-                  <span className="text-sm font-semibold text-white capitalize">
-                    {attempt.issueType || 'Visual Layout Discrepancy'}
-                  </span>
-                </div>
+        {fixAttempts.map((fix, idx) => (
+          <div
+            key={idx}
+            className="relative pl-6 border-l-2 border-outline-variant/30 pb-4 last:pb-0"
+          >
+            {/* Timeline Dot */}
+            <div className={`absolute -left-[5px] top-1 status-dot ${fix.resolved || fix.verified ? 'pulse-emerald' : 'pulse-amber'}`} />
 
-                {isResolved ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Resolved
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-                    <XCircle className="w-3.5 h-3.5" />
-                    Patch Tested
-                  </span>
-                )}
+            {/* Content */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-title-base font-bold text-on-surface">
+                  #{fix.attemptNumber || idx + 1}
+                </span>
+                <span className="text-body-sm font-semibold text-on-surface capitalize">
+                  {fix.issueType || 'Visual Defect'}
+                </span>
+                <span className={`text-label-caps px-2 py-0.5 rounded-full border ${
+                  fix.resolved || fix.verified
+                    ? 'bg-success/10 text-success-light border-success/30'
+                    : 'bg-warning/10 text-warning-light border-warning/30'
+                }`}>
+                  {fix.resolved || fix.verified ? 'Patch Tested' : 'Testing'}
+                </span>
               </div>
 
-              {attempt.description && (
-                <p className="text-xs text-slate-300 mb-3">{attempt.description}</p>
+              <p className="text-body-sm text-on-surface-variant">
+                {fix.description || 'Visual defect detected and patched.'}
+              </p>
+
+              {fix.selector && (
+                <div className="text-code-sm text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[12px] align-middle mr-1">code</span>
+                  Injected Tailwind Classes on <span className="text-primary-dim font-semibold">{fix.selector}</span>:
+                </div>
               )}
 
-              {/* Injected classes preview */}
-              {attempt.tailwindClasses && (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                    <Code2 className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Injected Tailwind Classes on <code>{attempt.selector || '#submit-order-button'}</code>:</span>
-                  </div>
-                  <pre className="p-2.5 bg-slate-900 rounded-lg text-xs font-mono text-indigo-300 border border-slate-800 overflow-x-auto whitespace-pre-wrap">
-                    {attempt.tailwindClasses}
-                  </pre>
+              {fix.tailwindClasses && (
+                <div className="recessed-panel p-3 font-mono text-code-sm text-tertiary-dim leading-relaxed break-all">
+                  {fix.tailwindClasses}
                 </div>
               )}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );

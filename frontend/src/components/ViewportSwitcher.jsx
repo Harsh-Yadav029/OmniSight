@@ -1,33 +1,33 @@
 import React from 'react';
-import { Smartphone, Tablet, Monitor } from 'lucide-react';
+
+const viewports = [
+  { width: 375, icon: 'smartphone', label: 'Mobile' },
+  { width: 768, icon: 'tablet_mac', label: 'Tablet' },
+  { width: 1440, icon: 'desktop_windows', label: 'Desktop' },
+];
 
 export const ViewportSwitcher = ({ activeViewport, onSelectViewport }) => {
-  const viewports = [
-    { id: 375, name: 'Mobile', width: '375px', icon: Smartphone, desc: 'iPhone / Mobile' },
-    { id: 768, name: 'Tablet', width: '768px', icon: Tablet, desc: 'iPad / Tablet' },
-    { id: 1440, name: 'Desktop', width: '1440px', icon: Monitor, desc: 'Desktop / FHD' },
-  ];
-
   return (
-    <div className="flex items-center gap-1.5 p-1 bg-slate-900/90 border border-slate-800 rounded-xl">
+    <div className="bg-surface-container-lowest/90 rounded-full p-1 flex items-center border border-outline-variant/30">
       {viewports.map((vp) => {
-        const Icon = vp.icon;
-        const isActive = activeViewport === vp.id;
+        const isActive = activeViewport === vp.width;
         return (
           <button
-            key={vp.id}
-            onClick={() => onSelectViewport(vp.id)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition ${
+            key={vp.width}
+            onClick={() => onSelectViewport(vp.width)}
+            className={`p-1.5 rounded-full flex items-center justify-center relative transition-all duration-200 ${
               isActive
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-primary text-white shadow-glow-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
             }`}
+            title={`${vp.label} (${vp.width}px)`}
           >
-            <Icon className="w-4 h-4" />
-            <span>{vp.name}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded ${isActive ? 'bg-indigo-700/60 text-indigo-100' : 'bg-slate-800 text-slate-400'}`}>
-              {vp.width}
-            </span>
+            <span className="material-symbols-outlined text-[18px]">{vp.icon}</span>
+            {isActive && (
+              <span className="absolute -bottom-1 -right-1 bg-surface-container-highest text-[8px] px-1 rounded font-mono border border-outline-variant/50 text-on-surface">
+                {vp.width}
+              </span>
+            )}
           </button>
         );
       })}
