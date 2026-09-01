@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 from navigator.navigate_checkout import run_navigation
 from orchestrator.graph import run_self_healing_loop
 from orchestrator.extract_fix import infer_source_file
+from vlm_engine.analyze import analyze_screenshot
 from vlm_engine.groq_helper import summarize_for_pr
 from orchestrator.github_integration import create_fix_pr, perform_pr_action
 
@@ -65,9 +66,10 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
     """
     Background orchestrator executing the full autonomous testing & self-healing pipeline:
     1. Multi-viewport Playwright navigation across all pages (Products, Cart, Checkout)
-    2. Multi-page visual audit & LangGraph iterative self-healing loop
-    3. Groq PR summarization
-    4. GitHub Pull Request creation for the specific healed component
+    2. Multi-page visual audit across all pages to detect defects anywhere in the app
+    3. LangGraph iterative self-healing loop on defective page
+    4. Groq PR summarization
+    5. GitHub Pull Request creation for the specific healed component
     """
     print(f"\n[Webhook Gateway] Starting autonomous audit for run_id '{run_id}' against {base_url}...")
     try:
@@ -83,26 +85,35 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
                 json={"status": "screenshots_captured"}
             )
 
-        # Step 2: Determine target page with potential visual defects
-        pages_to_audit = ["checkout", "cart", "product_listing"]
-        target_page = "checkout"
-        for page_name in pages_to_audit:
-            if page_name in manifest:
-                target_page = page_name
-                break
+        # Step 2: Audit all pages in manifest to locate defects
+        target_page = "product_listing"
+        for page_name in ["product_listing", "cart", "checkout"]:
+            shot_path = f"runs/{run_id}/screenshots/{page_name}_375.png"
+            html_path = f"runs/{run_id}/screenshots/{page_name}.html"
+            dom_html = ""
+            if Path(html_path).exists():
+                with open(html_path, "r", encoding="utf-8") as f:
+                    dom_html = f.read()
 
-        # Run LangGraph Self-Healing Loop on the target page
+            if Path(shot_path).exists():
+                analysis = await analyze_screenshot(shot_path, dom_html)
+                if analysis.get("has_issue"):
+                    print(f"[Webhook Gateway] Discovered defect on page '{page_name}': {analysis.get('issue_type')}")
+                    target_page = page_name
+                    break
+
+        # Step 3: Run LangGraph Self-Healing Loop on the target page
         final_state = await run_self_healing_loop(run_id=run_id, base_url=base_url, page_name=target_page)
 
-        # Step 3: If resolved, create GitHub PR and save record
+        # Step 4: If resolved, create GitHub PR and save record
         if final_state.get("resolved"):
             print(f"[Webhook Gateway] Visual bug resolved! Generating Groq summary & GitHub PR...")
             vlm_history = final_state.get("vlm_history", [])
             latest_vlm = vlm_history[-1] if vlm_history else {
                 "issue_type": "visual defect",
                 "description": "Visual layout regression resolved and verified.",
-                "suggested_tailwind_classes": "w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2",
-                "affected_selector": "#submit-order-button"
+                "suggested_tailwind_classes": "sticky top-0 z-40 w-full bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm",
+                "affected_selector": "header"
             }
 
             # Infer source file dynamically based on selector & issue context (Navbar.jsx, ProductCard.jsx, SubmitButton.jsx, etc.)
@@ -130,7 +141,7 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
                 }
             )
 
-            # Step 4: Persist PR record to backend
+            # Step 5: Persist PR record to backend
             async with httpx.AsyncClient(timeout=10.0) as client:
                 await client.post(
                     f"{backend_url}/api/internal/runs/{run_id}/pr-record",
