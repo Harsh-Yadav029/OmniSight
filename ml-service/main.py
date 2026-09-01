@@ -122,7 +122,8 @@ async def execute_navigation_task(run_id: str, base_url: str, backend_url: str, 
                 latest_vlm.get("description", ""),
                 latest_vlm.get("issue_type", "")
             )
-            file_path = f"test-target-app/{inferred_file.replace('\\', '/').lstrip('/')}"
+            clean_inferred = inferred_file.replace("\\", "/").lstrip("/")
+            file_path = f"test-target-app/{clean_inferred}"
 
             # Generate PR description and commit message via Groq
             pr_summary = await summarize_for_pr(latest_vlm, vlm_history)
