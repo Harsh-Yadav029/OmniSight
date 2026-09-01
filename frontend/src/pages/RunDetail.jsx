@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
@@ -9,7 +9,10 @@ import {
   RefreshCw, 
   Layers, 
   ShieldCheck, 
-  AlertCircle 
+  AlertCircle,
+  LayoutGrid,
+  ShoppingCart,
+  CreditCard
 } from 'lucide-react';
 import { api } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
@@ -35,6 +38,21 @@ export const RunDetail = () => {
       return isActive ? 5000 : false;
     }
   });
+
+  // Auto-detect page from defect details
+  useEffect(() => {
+    if (data?.fixAttempts && data.fixAttempts.length > 0) {
+      const latest = data.fixAttempts[data.fixAttempts.length - 1];
+      const issue = `${latest.issueType || ''} ${latest.description || ''} ${latest.selector || ''}`.toLowerCase();
+      if (issue.includes('header') || issue.includes('navbar') || issue.includes('product') || issue.includes('logo')) {
+        setActivePage('product_listing');
+      } else if (issue.includes('cart-item') || issue.includes('proceed-to-checkout')) {
+        setActivePage('cart');
+      } else {
+        setActivePage('checkout');
+      }
+    }
+  }, [data]);
 
   // Mutation for updating QA approval decision
   const decisionMutation = useMutation({
@@ -105,7 +123,7 @@ export const RunDetail = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Run #{run._id}
+                Run #{String(run._id).substring(0, 24)}
               </h1>
               <StatusBadge status={run.status} />
             </div>
@@ -114,8 +132,34 @@ export const RunDetail = () => {
             </p>
           </div>
 
-          {/* Viewport Switcher */}
-          <div className="self-start md:self-auto">
+          {/* Controls: Page Switcher + Viewport Switcher */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Page Switcher */}
+            <div className="flex items-center p-1 bg-slate-950 border border-slate-800 rounded-xl text-xs font-medium text-slate-400">
+              <button
+                onClick={() => setActivePage('product_listing')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activePage === 'product_listing' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Catalog</span>
+              </button>
+              <button
+                onClick={() => setActivePage('cart')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activePage === 'cart' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span>Cart</span>
+              </button>
+              <button
+                onClick={() => setActivePage('checkout')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activePage === 'checkout' ? 'bg-indigo-600 text-white font-semibold shadow' : 'hover:text-white'}`}
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Checkout</span>
+              </button>
+            </div>
+
+            {/* Viewport Switcher */}
             <ViewportSwitcher
               activeViewport={activeViewport}
               onSelectViewport={(vp) => setActiveViewport(vp)}

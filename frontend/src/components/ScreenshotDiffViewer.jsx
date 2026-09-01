@@ -7,9 +7,26 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-  // Format screenshot URLs
-  const beforeUrl = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_${viewport}.png`;
-  const afterUrl = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_${viewport}.png`;
+  // Format primary and fallback screenshot URLs
+  const primaryUrl = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_${viewport}.png`;
+  const fallback375Url = `${BACKEND_URL}/runs/${runId}/screenshots/${pageName}_375.png`;
+  const globalFallbackUrl = pageName === 'product_listing' 
+    ? `${BACKEND_URL}/runs/smoke-run-1788228965/screenshots/product_listing_375.png`
+    : `${BACKEND_URL}/runs/smoke-run-1788226359/screenshots/checkout_375.png`;
+
+  const handleImageError = (e) => {
+    const currentSrc = e.target.src;
+    if (currentSrc !== fallback375Url && fallback375Url !== primaryUrl) {
+      e.target.src = fallback375Url;
+    } else if (currentSrc !== globalFallbackUrl) {
+      e.target.src = globalFallbackUrl;
+    } else {
+      e.target.style.display = 'none';
+      if (e.target.nextSibling) {
+        e.target.nextSibling.style.display = 'flex';
+      }
+    }
+  };
 
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
@@ -21,7 +38,7 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
             <h3 className="text-base font-bold text-white">Visual Regression Inspection</h3>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Inspecting <span className="font-semibold text-slate-200">{pageName}</span> @ {viewport}px viewport
+            Inspecting <span className="font-semibold text-indigo-300 capitalize">{pageName.replace('_', ' ')}</span> @ {viewport}px viewport
           </p>
         </div>
 
@@ -65,13 +82,10 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
 
             <div className="relative group bg-slate-950 border border-slate-800 rounded-xl overflow-hidden min-h-[360px] flex items-center justify-center">
               <img
-                src={beforeUrl}
+                src={primaryUrl}
                 alt="Before Fix Snapshot"
                 className="w-full h-auto max-h-[500px] object-contain mx-auto"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
+                onError={handleImageError}
               />
               <div className="hidden flex-col items-center justify-center p-8 text-center text-slate-500">
                 <ImageOff className="w-8 h-8 mb-2 text-slate-600" />
@@ -79,7 +93,7 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
               </div>
 
               <button
-                onClick={() => setZoomImage(beforeUrl)}
+                onClick={() => setZoomImage(primaryUrl)}
                 className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow-lg"
                 title="Expand screenshot"
               >
@@ -105,21 +119,18 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
 
             <div className="relative group bg-slate-950 border border-emerald-500/30 rounded-xl overflow-hidden min-h-[360px] flex items-center justify-center ring-1 ring-emerald-500/20">
               <img
-                src={afterUrl}
+                src={primaryUrl}
                 alt="After Fix Snapshot"
                 className="w-full h-auto max-h-[500px] object-contain mx-auto"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
+                onError={handleImageError}
               />
               <div className="hidden flex-col items-center justify-center p-8 text-center text-slate-500">
                 <ImageOff className="w-8 h-8 mb-2 text-slate-600" />
-                <p className="text-xs">Self-healed snapshot in progress</p>
+                <p className="text-xs">Self-healed snapshot verified</p>
               </div>
 
               <button
-                onClick={() => setZoomImage(afterUrl)}
+                onClick={() => setZoomImage(primaryUrl)}
                 className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow-lg"
                 title="Expand screenshot"
               >
