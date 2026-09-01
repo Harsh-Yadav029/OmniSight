@@ -1,5 +1,14 @@
+import sys
 import os
 import asyncio
+
+# Ensure Windows uses ProactorEventLoop for Playwright Chromium subprocess support
+if sys.platform == "win32":
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except Exception:
+        pass
+
 from typing import Optional
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Header, status
 from fastapi.middleware.cors import CORSMiddleware
