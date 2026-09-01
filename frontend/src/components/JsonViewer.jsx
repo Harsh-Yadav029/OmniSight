@@ -16,9 +16,9 @@ export const JsonViewer = ({ data, title = 'VLM Raw Inspection Output (JSON)' })
 
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-      <button
+      <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between bg-slate-900/90 hover:bg-slate-800/80 transition text-left"
+        className="w-full px-6 py-4 flex items-center justify-between bg-slate-900/90 hover:bg-slate-800/80 cursor-pointer transition text-left select-none"
       >
         <div className="flex items-center gap-2.5">
           <Terminal className="w-4 h-4 text-indigo-400" />
@@ -27,6 +27,7 @@ export const JsonViewer = ({ data, title = 'VLM Raw Inspection Output (JSON)' })
 
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={handleCopy}
             className="p-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition flex items-center gap-1"
             title="Copy JSON"
@@ -41,7 +42,7 @@ export const JsonViewer = ({ data, title = 'VLM Raw Inspection Output (JSON)' })
             <ChevronRight className="w-4 h-4 text-slate-400" />
           )}
         </div>
-      </button>
+      </div>
 
       {isOpen && (
         <div className="p-4 bg-slate-950 border-t border-slate-800/80">
