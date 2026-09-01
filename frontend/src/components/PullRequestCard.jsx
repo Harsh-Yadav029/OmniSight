@@ -7,8 +7,8 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
 
   if (!pullRequest) {
     return (
-      <div className="glass-panel p-5">
-        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2">
+      <div className="card-ambient p-6">
+        <h3 className="text-title-sm font-bold text-on-surface flex items-center gap-2">
           <span className="material-symbols-outlined text-[20px] text-primary">merge</span>
           <span>Pull Request</span>
         </h3>
@@ -32,31 +32,31 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
   };
 
   return (
-    <div className="glass-panel p-5 space-y-4">
+    <div className="card-ambient p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-title-base font-bold text-on-surface flex items-center space-x-2">
+        <h3 className="text-title-sm font-bold text-on-surface flex items-center gap-2">
           <span className="material-symbols-outlined text-[20px] text-primary">merge</span>
-          <span>Automated GitHub Pull Request</span>
+          <span>Automated GitHub PR</span>
         </h3>
-        <span className={`text-label-caps px-2.5 py-1 rounded-full border ${
+        <span className={`text-label-caps px-2.5 py-1 rounded-full border font-bold ${
           isPending
-            ? 'bg-warning/10 text-warning-light border-warning/30'
+            ? 'bg-secondary/15 text-secondary border-secondary/30'
             : pullRequest.decision === 'approved'
-              ? 'bg-success/10 text-success-light border-success/30'
-              : 'bg-error/10 text-error-light border-error/30'
+              ? 'bg-tertiary/15 text-tertiary border-tertiary/30'
+              : 'bg-error/15 text-error border-error/30'
         }`}>
-          {isPending ? 'Pending QA Approval' : pullRequest.decision === 'approved' ? 'Approved' : 'Rejected'}
+          {isPending ? 'PENDING APPROVAL' : pullRequest.decision === 'approved' ? 'APPROVED' : 'REJECTED'}
         </span>
       </div>
 
       {/* PR Details */}
-      <div className="recessed-panel p-3 space-y-2">
-        <div className="text-code-sm text-on-surface-variant">
-          Target Fix Branch:
+      <div className="p-3.5 bg-surface-container-low rounded-xl border border-[#E8E6E1] space-y-2">
+        <div className="text-label-caps text-on-surface-variant">
+          TARGET FIX BRANCH
         </div>
-        <div className="flex items-center justify-between">
-          <code className="font-mono text-code-base text-tertiary-dim break-all">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <code className="font-mono text-code-mono text-primary font-bold break-all">
             {pullRequest.branchName || `omnisight/fix-${runId}`}
           </code>
           {pullRequest.prUrl && (
@@ -64,9 +64,9 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
               href={pullRequest.prUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-code-sm font-semibold hover:shadow-glow-primary transition-all shrink-0 ml-3"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-container text-white rounded-lg text-body-sm font-semibold hover:bg-primary transition shrink-0 shadow-sm"
             >
-              <span>View Pull Request</span>
+              <span>View PR on GitHub</span>
               <span className="material-symbols-outlined text-[14px]">open_in_new</span>
             </a>
           )}
@@ -75,23 +75,23 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
 
       {/* Resolution Actions */}
       {isPending && (
-        <div className="space-y-3 pt-2 border-t border-[#1e293b]">
-          <h4 className="text-body-sm font-semibold text-on-surface-variant">Resolution Actions</h4>
+        <div className="space-y-3 pt-3 border-t border-[#E8E6E1]">
+          <h4 className="text-label-caps text-on-surface-variant font-bold">RESOLUTION ACTIONS</h4>
 
           <button
             onClick={() => handleDecision('approved')}
             disabled={submitting}
-            className="w-full bg-success/10 hover:bg-success/20 text-success-light border border-success/30 text-body-base font-semibold py-2.5 rounded-lg flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+            className="w-full bg-primary-container hover:bg-primary text-white text-body-medium font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[18px]">check_circle</span>
-            <span>Approve Fix</span>
+            <span>Approve & Merge Fix</span>
           </button>
 
           {!showRejectInput ? (
             <button
               onClick={() => setShowRejectInput(true)}
               disabled={submitting}
-              className="w-full bg-transparent border border-[#1e293b] text-on-surface-variant hover:text-error-light hover:border-error/30 hover:bg-error/5 text-body-base font-semibold py-2.5 rounded-lg flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+              className="w-full bg-white border border-[#E8E6E1] hover:bg-surface-container-low text-error hover:border-error/30 text-body-medium font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[18px]">cancel</span>
               <span>Reject Fix</span>
@@ -103,19 +103,19 @@ export const PullRequestCard = ({ pullRequest, runId, onDecision }) => {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Reason for rejection (optional)"
-                className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-2 text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-error/50 transition"
+                className="w-full bg-white border border-[#E8E6E1] rounded-xl px-3 py-2 text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-error focus:ring-2 focus:ring-error/15 transition"
               />
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleDecision('rejected')}
                   disabled={submitting}
-                  className="flex-1 bg-error/10 text-error-light border border-error/30 text-body-sm font-semibold py-2 rounded-lg hover:bg-error/20 transition disabled:opacity-50"
+                  className="flex-1 bg-error text-white text-body-sm font-semibold py-2 rounded-xl hover:bg-error-light transition disabled:opacity-50 shadow-sm"
                 >
                   Confirm Reject
                 </button>
                 <button
                   onClick={() => { setShowRejectInput(false); setRejectionReason(''); }}
-                  className="px-4 text-on-surface-variant hover:text-on-surface text-body-sm py-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-highest/30 transition"
+                  className="px-4 text-on-surface-variant hover:text-on-surface text-body-sm py-2 rounded-xl border border-[#E8E6E1] hover:bg-surface-container-high transition"
                 >
                   Cancel
                 </button>

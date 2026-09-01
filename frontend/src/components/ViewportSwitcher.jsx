@@ -8,26 +8,27 @@ const viewports = [
 
 export const ViewportSwitcher = ({ activeViewport, onSelectViewport }) => {
   return (
-    <div className="bg-surface-container-lowest/90 rounded-full p-1 flex items-center border border-outline-variant/30">
+    <div className="bg-white rounded-full p-1 flex items-center border border-[#E8E6E1] shadow-sm">
       {viewports.map((vp) => {
         const isActive = activeViewport === vp.width;
         return (
           <button
             key={vp.width}
             onClick={() => onSelectViewport(vp.width)}
-            className={`p-1.5 rounded-full flex items-center justify-center relative transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all duration-200 ${
               isActive
-                ? 'bg-primary text-white shadow-glow-primary'
-                : 'text-on-surface-variant hover:text-on-surface'
+                ? 'bg-primary-container text-white shadow-sm font-semibold'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50'
             }`}
             title={`${vp.label} (${vp.width}px)`}
           >
-            <span className="material-symbols-outlined text-[18px]">{vp.icon}</span>
-            {isActive && (
-              <span className="absolute -bottom-1 -right-1 bg-surface-container-highest text-[8px] px-1 rounded font-mono border border-outline-variant/50 text-on-surface">
-                {vp.width}
-              </span>
-            )}
+            <span className="material-symbols-outlined text-[16px]">{vp.icon}</span>
+            <span className="text-body-sm hidden sm:inline">{vp.label}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+              isActive ? 'bg-white/20 text-white' : 'bg-surface-container-high text-on-surface-variant'
+            }`}>
+              {vp.width}px
+            </span>
           </button>
         );
       })}

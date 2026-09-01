@@ -25,23 +25,23 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
   };
 
   const tabs = [
-    { id: 'split', label: 'Visual Diff' },
+    { id: 'split', label: 'Side-by-Side Diff' },
     { id: 'before', label: 'Baseline' },
-    { id: 'after', label: 'Current' },
+    { id: 'after', label: 'Self-Healed' },
   ];
 
   return (
-    <div className="glass-panel overflow-hidden flex flex-col">
+    <div className="card-ambient overflow-hidden flex flex-col bg-white">
       {/* Viewer Header */}
-      <div className="flex justify-between items-center p-4 border-b border-[#1e293b] bg-surface-container-low">
-        <div className="flex space-x-2">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b border-[#E8E6E1] bg-surface-container-low gap-3">
+        <div className="flex items-center gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-1.5 rounded-lg font-mono text-code-base transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-body-sm transition-all ${
                 activeTab === tab.id
-                  ? 'bg-surface-container-highest text-on-surface border border-outline-variant/30'
+                  ? 'bg-white text-primary font-semibold shadow-sm border border-[#E8E6E1]'
                   : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -49,71 +49,67 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
             </button>
           ))}
         </div>
-        <div className="flex items-center space-x-1">
-          <span className="text-body-sm text-on-surface-variant mr-2 font-mono">
-            {pageName.replace('_', ' ')} @ {viewport}px
+        <div className="flex items-center space-x-2">
+          <span className="text-code-mono text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">
+            {pageName.replace('_', ' ')} · {viewport}px
           </span>
-          <button className="text-on-surface-variant hover:text-on-surface p-1 rounded transition">
-            <span className="material-symbols-outlined text-[18px]">zoom_in</span>
-          </button>
-          <button className="text-on-surface-variant hover:text-on-surface p-1 rounded transition">
-            <span className="material-symbols-outlined text-[18px]">fit_screen</span>
-          </button>
         </div>
       </div>
 
-      {/* Diff Canvases */}
-      <div className={`flex-1 flex bg-[#020617] relative ${activeTab === 'split' ? '' : ''}`}>
+      {/* Dark Studio Diff Canvases */}
+      <div className="flex-1 flex bg-[#090D16] p-4 gap-4 overflow-hidden relative">
         {/* Left: Baseline (Defect) */}
         {(activeTab === 'split' || activeTab === 'before') && (
-          <div className={`${activeTab === 'split' ? 'flex-1 border-r border-[#1e293b]' : 'flex-1'} flex flex-col relative defect-border group`}>
-            <div className="absolute top-4 left-4 z-10 bg-surface-container-low/80 backdrop-blur text-error px-3 py-1 rounded-md text-code-sm font-mono border border-error/30 flex items-center space-x-2">
+          <div className="flex-1 flex flex-col relative rounded-xl border border-error/30 overflow-hidden bg-black/40 group">
+            <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur text-error px-2.5 py-1 rounded-md text-label-caps font-bold border border-error/20 flex items-center gap-1.5 shadow-sm">
               <span className="status-dot bg-error" />
-              <span>Baseline (Defect)</span>
+              <span>BASELINE DEFECT</span>
             </div>
             <button
               onClick={() => setZoomImage(primaryUrl)}
-              className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-container p-1.5 rounded text-on-surface-variant border border-outline-variant/30 hover:text-on-surface"
+              className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur p-1.5 rounded text-white hover:text-white/80"
+              title="Fullscreen"
             >
               <span className="material-symbols-outlined text-[16px]">fullscreen</span>
             </button>
-            <div className="flex-1 p-6 overflow-hidden flex items-center justify-center min-h-[360px]">
+            <div className="flex-1 p-4 overflow-hidden flex items-center justify-center min-h-[340px]">
               <img
                 src={primaryUrl}
-                alt="Before Fix Snapshot"
-                className="max-w-full max-h-[500px] object-contain rounded border border-outline-variant/20"
+                alt="Baseline Snapshot"
+                className="max-w-full max-h-[460px] object-contain rounded border border-white/10"
                 onError={handleImageError}
               />
-              <div className="hidden flex-col items-center justify-center p-8 text-center text-on-surface-variant">
-                <span className="material-symbols-outlined text-[32px] mb-2 text-outline">broken_image</span>
+              <div className="hidden flex-col items-center justify-center p-8 text-center text-white/50">
+                <span className="material-symbols-outlined text-[32px] mb-2">broken_image</span>
                 <p className="text-body-sm">Snapshot pending capture</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Right: Current (Verified) */}
+        {/* Right: Current (Self-Healed) */}
         {(activeTab === 'split' || activeTab === 'after') && (
-          <div className={`${activeTab === 'split' ? 'flex-1' : 'flex-1'} flex flex-col relative verified-border group`}>
-            <div className="absolute top-4 left-4 z-10 bg-surface-container-low/80 backdrop-blur text-success-light px-3 py-1 rounded-md text-code-sm font-mono border border-success/30 flex items-center space-x-2">
-              <span className="status-dot bg-success" />
-              <span>Current (Self-Healed)</span>
+          <div className="flex-1 flex flex-col relative rounded-xl border border-tertiary/30 overflow-hidden bg-black/40 group">
+            <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur text-tertiary px-2.5 py-1 rounded-md text-label-caps font-bold border border-tertiary/20 flex items-center gap-1.5 shadow-sm">
+              <span className="status-dot bg-tertiary" />
+              <span>SELF-HEALED</span>
             </div>
             <button
               onClick={() => setZoomImage(primaryUrl)}
-              className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-container p-1.5 rounded text-on-surface-variant border border-outline-variant/30 hover:text-on-surface"
+              className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur p-1.5 rounded text-white hover:text-white/80"
+              title="Fullscreen"
             >
               <span className="material-symbols-outlined text-[16px]">fullscreen</span>
             </button>
-            <div className="flex-1 p-6 overflow-hidden flex items-center justify-center min-h-[360px]">
+            <div className="flex-1 p-4 overflow-hidden flex items-center justify-center min-h-[340px]">
               <img
                 src={primaryUrl}
-                alt="After Fix Snapshot"
-                className="max-w-full max-h-[500px] object-contain rounded border border-outline-variant/20"
+                alt="Healed Snapshot"
+                className="max-w-full max-h-[460px] object-contain rounded border border-white/10"
                 onError={handleImageError}
               />
-              <div className="hidden flex-col items-center justify-center p-8 text-center text-on-surface-variant">
-                <span className="material-symbols-outlined text-[32px] mb-2 text-outline">broken_image</span>
+              <div className="hidden flex-col items-center justify-center p-8 text-center text-white/50">
+                <span className="material-symbols-outlined text-[32px] mb-2">broken_image</span>
                 <p className="text-body-sm">Healed snapshot verified</p>
               </div>
             </div>
@@ -127,8 +123,8 @@ export const ScreenshotDiffViewer = ({ runId, pageName = 'checkout', viewport = 
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setZoomImage(null)}
         >
-          <div className="relative max-w-5xl max-h-[90vh] glass-panel p-3">
-            <img src={zoomImage} alt="Zoomed view" className="max-w-full max-h-[85vh] rounded object-contain" />
+          <div className="relative max-w-5xl max-h-[90vh] bg-white rounded-2xl p-4 shadow-2xl">
+            <img src={zoomImage} alt="Zoomed snapshot" className="max-w-full max-h-[80vh] rounded object-contain" />
             <p className="text-center text-body-sm text-on-surface-variant mt-2">Click anywhere to close</p>
           </div>
         </div>

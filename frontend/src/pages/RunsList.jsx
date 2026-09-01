@@ -56,160 +56,159 @@ export const RunsList = () => {
   const activeRuns = runs.filter((r) => ['pending', 'analyzing', 'fix_applied', 'screenshots_captured'].includes(r.status)).length;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
-      {/* Top App Bar */}
-      <header className="bg-canvas/80 backdrop-blur-md border-b border-outline-variant/30 flex justify-between items-center w-full px-6 h-16 shrink-0 sticky top-0 z-50">
-        <h2 className="text-headline-md font-bold text-on-surface">Build History</h2>
-        <div className="flex items-center space-x-3">
+    <div className="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
+      {/* Header Banner */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-2">
+        <div>
+          <h2 className="text-display-lg font-extrabold text-on-surface mb-1 tracking-tight">Build Runs</h2>
+          <p className="text-body-base text-on-surface-variant">AI-powered visual QA, watching every push.</p>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={handleTriggerRun}
             disabled={triggering}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary text-on-primary text-body-sm font-semibold rounded-xl hover:shadow-glow-primary transition-all active:scale-[0.98] disabled:opacity-50"
+            className="bg-primary-container text-white font-body-medium font-semibold px-5 py-2.5 rounded-xl hover:bg-primary shadow-sm hover:shadow transition flex items-center gap-2 disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[18px]">{triggering ? 'sync' : 'play_arrow'}</span>
-            <span>{triggering ? 'Triggering...' : 'Trigger Visual Audit'}</span>
+            <span className="material-symbols-outlined text-[20px]">{triggering ? 'sync' : 'play_arrow'}</span>
+            <span>{triggering ? 'Triggering...' : 'New Run'}</span>
           </button>
+
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center space-x-2 px-3 py-2 bg-surface-container border border-outline-variant/30 text-on-surface-variant text-body-sm font-semibold rounded-xl hover:text-on-surface transition disabled:opacity-50"
+            className="px-3.5 py-2.5 bg-white border border-[#E8E6E1] text-on-surface-variant hover:text-on-surface rounded-xl shadow-sm text-body-sm font-medium transition flex items-center gap-1.5"
           >
-            <span className={`material-symbols-outlined text-[18px] ${isFetching ? 'animate-spin' : ''}`}>sync</span>
-            <span>{isFetching ? 'Syncing...' : 'Refresh'}</span>
+            <span className={`material-symbols-outlined text-[18px] ${isFetching ? 'animate-spin text-primary' : ''}`}>sync</span>
+            <span className="hidden sm:inline">{isFetching ? 'Syncing...' : 'Refresh'}</span>
           </button>
         </div>
       </header>
 
-      {/* Content */}
-      <div className="p-6 space-y-6 overflow-y-auto flex-1">
-        {/* Metrics Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm font-semibold text-on-surface-variant">Total Build Runs</span>
-              <span className="material-symbols-outlined text-[20px] text-primary">layers</span>
-            </div>
-            <p className="text-display-lg font-extrabold text-on-surface mt-2">{totalRuns}</p>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="card-ambient p-5 bg-white">
+          <div className="flex items-center justify-between">
+            <span className="text-label-caps text-on-surface-variant font-bold">TOTAL BUILD RUNS</span>
+            <span className="material-symbols-outlined text-[22px] text-primary">layers</span>
           </div>
-          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm font-semibold text-success-light">Verified & Healed</span>
-              <span className="material-symbols-outlined text-[20px] text-success" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-            </div>
-            <p className="text-display-lg font-extrabold text-on-surface mt-2">{verifiedRuns}</p>
-          </div>
-          <div className="glass-panel p-5 hover:glow-primary-box transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm font-semibold text-secondary">Active Pipelines</span>
-              <span className="material-symbols-outlined text-[20px] text-secondary">auto_fix_high</span>
-            </div>
-            <p className="text-display-lg font-extrabold text-on-surface mt-2">{activeRuns}</p>
-          </div>
+          <p className="text-display-lg font-extrabold text-on-surface mt-2">{totalRuns}</p>
         </div>
-
-        {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 glass-panel p-4">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined text-[18px] text-outline absolute left-3.5 top-1/2 -translate-y-1/2">search</span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search runs by commit, branch, or repo..."
-              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/30 rounded-xl text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary/50 focus:shadow-glow-primary transition font-sans"
-            />
+        <div className="card-ambient p-5 bg-white">
+          <div className="flex items-center justify-between">
+            <span className="text-label-caps text-tertiary font-bold">VERIFIED & HEALED</span>
+            <span className="material-symbols-outlined text-[22px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="material-symbols-outlined text-[18px] text-outline">filter_list</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3 py-2.5 text-body-sm font-medium text-on-surface-variant focus:outline-none focus:border-primary/50"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="verified">Verified & Healed</option>
-              <option value="pr_created">PR Created</option>
-              <option value="analyzing">AI Analyzing</option>
-              <option value="fix_applied">Fix Applied</option>
-              <option value="screenshots_captured">Screenshots Captured</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
+          <p className="text-display-lg font-extrabold text-tertiary mt-2">{verifiedRuns}</p>
         </div>
-
-        {/* Runs Table */}
-        {isLoading ? (
-          <div className="p-12 text-center text-on-surface-variant space-y-3">
-            <span className="material-symbols-outlined text-[32px] animate-spin text-primary">progress_activity</span>
-            <p className="text-body-base font-semibold">Loading build runs...</p>
+        <div className="card-ambient p-5 bg-white">
+          <div className="flex items-center justify-between">
+            <span className="text-label-caps text-secondary font-bold">ACTIVE PIPELINES</span>
+            <span className="material-symbols-outlined text-[22px] text-secondary">auto_fix_high</span>
           </div>
-        ) : filteredRuns.length === 0 ? (
-          <div className="p-12 text-center glass-panel text-on-surface-variant space-y-3">
-            <span className="material-symbols-outlined text-[32px] text-outline">visibility_off</span>
-            <h3 className="text-title-base font-bold text-on-surface">No Build Runs Found</h3>
-            <p className="text-body-sm text-on-surface-variant max-w-sm mx-auto">
-              Click "Trigger Visual Audit" or run <code className="font-mono text-primary-dim">python scripts/smoke_test.py</code>
-            </p>
-          </div>
-        ) : (
-          <div className="glass-panel overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-body-sm">
-                <thead className="bg-surface-container-lowest border-b border-[#1e293b]">
-                  <tr className="text-label-caps text-on-surface-variant uppercase tracking-wider">
-                    <th className="px-6 py-4">Build Run ID</th>
-                    <th className="px-6 py-4">Branch & Repository</th>
-                    <th className="px-6 py-4">Commit SHA</th>
-                    <th className="px-6 py-4">Lifecycle Status</th>
-                    <th className="px-6 py-4">Timestamp</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/15">
-                  {filteredRuns.map((run) => (
-                    <tr key={run._id} className="hover:bg-surface-container/50 transition group">
-                      <td className="px-6 py-4 font-mono text-code-base font-bold text-on-surface">
-                        {String(run._id).substring(0, 18)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-1.5 font-semibold text-on-surface text-body-sm">
-                          <span className="material-symbols-outlined text-[16px] text-primary">fork_right</span>
-                          <span>{run.branch || 'main'}</span>
-                        </div>
-                        <p className="text-code-sm text-on-surface-variant mt-0.5 font-mono">{run.repo || 'Harsh-Yadav029/OmniSight'}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="inline-flex items-center space-x-1 font-mono text-code-base text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20">
-                          <span className="material-symbols-outlined text-[14px] text-outline">commit</span>
-                          <span>{(run.commitSha || 'unknown').substring(0, 7)}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={run.status} />
-                      </td>
-                      <td className="px-6 py-4 text-on-surface-variant whitespace-nowrap">
-                        <div className="flex items-center space-x-1 text-code-sm font-mono">
-                          <span className="material-symbols-outlined text-[14px] text-outline">schedule</span>
-                          <span>{run.createdAt ? new Date(run.createdAt).toLocaleTimeString() : 'Just now'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Link
-                          to={`/runs/${run._id}`}
-                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-code-sm font-semibold hover:shadow-glow-primary transition-all group-hover:scale-105"
-                        >
-                          <span>Inspect</span>
-                          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+          <p className="text-display-lg font-extrabold text-secondary mt-2">{activeRuns}</p>
+        </div>
       </div>
+
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 card-ambient p-4 bg-white">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined text-[20px] text-outline absolute left-3.5 top-1/2 -translate-y-1/2">search</span>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search runs by commit, branch, or repo..."
+            className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low border border-[#E8E6E1] rounded-xl text-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition font-sans"
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="material-symbols-outlined text-[18px] text-outline">filter_list</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-surface-container-low border border-[#E8E6E1] rounded-xl px-3 py-2.5 text-body-sm font-medium text-on-surface focus:outline-none focus:border-primary"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="verified">Verified & Healed</option>
+            <option value="pr_created">PR Created</option>
+            <option value="analyzing">AI Analyzing</option>
+            <option value="fix_applied">Fix Applied</option>
+            <option value="screenshots_captured">Screenshots Captured</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Runs Bento List */}
+      {isLoading ? (
+        <div className="p-16 text-center text-on-surface-variant space-y-3 card-ambient bg-white">
+          <span className="material-symbols-outlined text-[36px] animate-spin text-primary">progress_activity</span>
+          <p className="text-body-base font-semibold">Loading build runs...</p>
+        </div>
+      ) : filteredRuns.length === 0 ? (
+        <div className="p-16 text-center card-ambient bg-white text-on-surface-variant space-y-3">
+          <span className="material-symbols-outlined text-[36px] text-outline">visibility_off</span>
+          <h3 className="text-title-sm font-bold text-on-surface">No Build Runs Found</h3>
+          <p className="text-body-sm text-on-surface-variant max-w-sm mx-auto">
+            Click "New Run" or run <code className="font-mono text-primary font-semibold">python scripts/smoke_test.py</code>
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filteredRuns.map((run) => (
+            <Link
+              key={run._id}
+              to={`/runs/${run._id}`}
+              className="group bg-white rounded-2xl p-5 card-ambient hover:bg-[#FAF9F6] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden"
+            >
+              <div className="flex items-start gap-4 w-full md:w-auto">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                  ['analyzing', 'fix_applied'].includes(run.status)
+                    ? 'bg-primary/10 text-primary'
+                    : ['verified', 'completed', 'pr_created'].includes(run.status)
+                    ? 'bg-tertiary/10 text-tertiary'
+                    : 'bg-surface-container-high text-on-surface-variant'
+                }`}>
+                  <span className="material-symbols-outlined text-[22px]">
+                    {['analyzing', 'fix_applied'].includes(run.status) ? 'analytics' :
+                     ['verified', 'completed', 'pr_created'].includes(run.status) ? 'task_alt' : 'photo_library'}
+                  </span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-title-sm font-bold text-on-surface">
+                      {run.repo || 'OmniSight'}
+                    </span>
+                    <span className="font-mono text-code-mono bg-surface-container-high text-on-surface px-2 py-0.5 rounded-md font-semibold">
+                      {run.branch || 'main'}
+                    </span>
+                    <span className="font-mono text-code-mono text-on-surface-variant text-[12px]">
+                      {(run.commitSha || '').substring(0, 7)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={run.status} />
+                    <span className="text-body-sm text-on-surface-variant font-medium">
+                      {run.createdAt ? new Date(run.createdAt).toLocaleTimeString() : 'Just now'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end w-full md:w-auto gap-4">
+                <div className="hidden lg:flex items-center gap-3 text-on-surface-variant text-body-sm">
+                  <span className="font-mono text-code-mono bg-surface-container-low px-2 py-1 rounded border border-[#E8E6E1]">
+                    ID: {String(run._id).substring(0, 12)}
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1 duration-200">
+                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

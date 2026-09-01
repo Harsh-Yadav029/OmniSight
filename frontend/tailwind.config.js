@@ -8,97 +8,99 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Obsidian Neon — Canvas & Surfaces
-        canvas: "#020617",
+        // OmniSight Calm Editorial Palette (Stitch 1721510093736031163)
+        canvas: "#FAFAF8",
         surface: {
-          DEFAULT: "#0f172a",
-          dim: "#0b1326",
-          bright: "#31394d",
+          DEFAULT: "#fff8f1",
+          dim: "#dfd9d2",
+          bright: "#fff8f1",
+          variant: "#e7e2db",
           container: {
-            lowest: "#060e20",
-            low: "#131b2e",
-            DEFAULT: "#171f33",
-            high: "#222a3d",
-            highest: "#2d3449",
+            lowest: "#ffffff",
+            low: "#f9f3eb",
+            DEFAULT: "#f3ede6",
+            high: "#ede7e0",
+            highest: "#e7e2db",
           },
         },
         "on-surface": {
-          DEFAULT: "#dae2fd",
-          variant: "#c7c4d7",
+          DEFAULT: "#1d1b17",
+          variant: "#3f4948",
         },
-        // Primary — Electric Indigo
+        // Primary — Calm Teal
         primary: {
-          DEFAULT: "#818cf8",
-          container: "#8083ff",
-          dim: "#c0c1ff",
-          fixed: "#e1e0ff",
+          DEFAULT: "#016464",
+          container: "#2d7d7d",
+          fixed: "#a4f0ef",
+          "fixed-dim": "#88d3d3",
         },
         "on-primary": {
-          DEFAULT: "#1000a9",
-          container: "#0d0096",
+          DEFAULT: "#ffffff",
+          container: "#dafffe",
         },
-        // Secondary — Cyber Purple
+        // Secondary — Warm Coral / Amber
         secondary: {
-          DEFAULT: "#c084fc",
-          dim: "#ddb7ff",
-          container: "#6f00be",
-          fixed: "#f0dbff",
+          DEFAULT: "#904c1b",
+          container: "#ffa76e",
+          fixed: "#ffdbc8",
+          "fixed-dim": "#ffb68a",
         },
         "on-secondary": {
-          DEFAULT: "#490080",
-          container: "#d6a9ff",
+          DEFAULT: "#ffffff",
+          container: "#783a08",
         },
-        // Tertiary — Cyber Cyan
+        // Tertiary — Sage Green (Verified / Healed)
         tertiary: {
-          DEFAULT: "#22d3ee",
-          dim: "#4cd7f6",
-          container: "#009eb9",
-          fixed: "#acedff",
+          DEFAULT: "#356346",
+          container: "#4d7c5d",
+          fixed: "#bbefc9",
+          "fixed-dim": "#a0d2ae",
         },
         "on-tertiary": {
-          DEFAULT: "#003640",
-          container: "#002f38",
+          DEFAULT: "#ffffff",
+          container: "#e5ffe9",
         },
         // Semantic Status
-        success: {
-          DEFAULT: "#10b981",
-          light: "#34d399",
-          dim: "#059669",
-        },
         error: {
-          DEFAULT: "#f43f5e",
-          light: "#fb7185",
-          dim: "#e11d48",
+          DEFAULT: "#ba1a1a",
+          container: "#ffdad6",
+          light: "#dc2626",
+        },
+        "on-error": {
+          DEFAULT: "#ffffff",
+          container: "#93000a",
         },
         warning: {
-          DEFAULT: "#f59e0b",
-          light: "#fbbf24",
+          DEFAULT: "#d97706",
+          light: "#f59e0b",
         },
-        // Outline
+        // Outline & Dividers
         outline: {
-          DEFAULT: "#908fa0",
-          variant: "#464554",
+          DEFAULT: "#6f7979",
+          variant: "#bec9c8",
+          border: "#E8E6E1",
         },
+        // Dark Studio for Diff Viewport
+        studio: "#090D16",
         // Legacy compat
-        border: "hsl(var(--border, 214.3 31.8% 91.4%))",
-        background: "hsl(var(--background, 0 0% 100%))",
-        foreground: "hsl(var(--foreground, 222.2 84% 4.9%))",
+        border: "#E8E6E1",
+        background: "#FAFAF8",
+        foreground: "#1d1b17",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
+        display: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
       },
       fontSize: {
-        "display-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.03em", fontWeight: "800" }],
-        "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "700" }],
-        "headline-md": ["18px", { lineHeight: "26px", letterSpacing: "-0.01em", fontWeight: "700" }],
-        "title-base": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }],
-        "body-base": ["14px", { lineHeight: "20px", letterSpacing: "0", fontWeight: "400" }],
-        "body-sm": ["12px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "400" }],
-        "code-base": ["12px", { lineHeight: "18px", letterSpacing: "0", fontWeight: "500" }],
-        "code-sm": ["11px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "400" }],
-        "label-caps": ["10px", { lineHeight: "14px", letterSpacing: "0.05em", fontWeight: "700" }],
+        "display-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.025em", fontWeight: "800" }],
+        "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "title-sm": ["18px", { lineHeight: "26px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "body-base": ["16px", { lineHeight: "25.6px", letterSpacing: "0", fontWeight: "400" }],
+        "body-medium": ["15px", { lineHeight: "24px", letterSpacing: "0", fontWeight: "500" }],
+        "body-sm": ["13px", { lineHeight: "20px", letterSpacing: "0", fontWeight: "400" }],
+        "label-caps": ["11px", { lineHeight: "16px", letterSpacing: "0.06em", fontWeight: "700" }],
+        "code-mono": ["13px", { lineHeight: "18px", letterSpacing: "-0.01em", fontWeight: "500" }],
       },
       borderRadius: {
         sm: "0.25rem",
@@ -108,29 +110,10 @@ export default {
         xl: "1.5rem",
         full: "9999px",
       },
-      spacing: {
-        unit: "4px",
-        xs: "4px",
-        gutter: "16px",
-        "container-max": "1280px",
-      },
       boxShadow: {
-        "glow-primary": "0 0 15px rgba(99, 102, 241, 0.25), 0 0 30px rgba(99, 102, 241, 0.1)",
-        "glow-secondary": "0 0 15px rgba(168, 85, 247, 0.25)",
-        "glow-tertiary": "0 0 15px rgba(6, 182, 212, 0.3)",
-        "glow-success": "0 0 15px rgba(16, 185, 129, 0.25)",
-        "glow-error": "0 0 12px rgba(244, 63, 94, 0.25)",
-        "inset-terminal": "inset 0 2px 4px 0 rgb(0 0 0 / 0.5)",
-      },
-      animation: {
-        "pulse-dot": "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-      },
-      keyframes: {
-        "pulse-ring": {
-          "0%": { transform: "scale(0.95)", boxShadow: "0 0 0 0 rgba(168, 85, 247, 0.7)" },
-          "70%": { transform: "scale(1)", boxShadow: "0 0 0 4px rgba(168, 85, 247, 0)" },
-          "100%": { transform: "scale(0.95)", boxShadow: "0 0 0 0 rgba(168, 85, 247, 0)" },
-        },
+        "ambient-lvl1": "0 4px 20px -2px rgba(26, 26, 26, 0.05)",
+        "ambient-lvl2": "0 12px 32px -4px rgba(26, 26, 26, 0.12)",
+        "teal-focus": "0 0 0 3px rgba(45, 125, 125, 0.15)",
       },
     },
   },

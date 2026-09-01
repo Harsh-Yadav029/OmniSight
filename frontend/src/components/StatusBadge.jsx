@@ -2,73 +2,73 @@ import React from 'react';
 
 const statusConfig = {
   verified: {
-    dotClass: 'pulse-emerald',
-    label: 'Self-Healed & Verified',
-    textColor: 'text-success-light',
-    bgColor: 'bg-success/10',
-    borderColor: 'border-success/30',
+    dotClass: 'pulse-sage',
+    label: 'VERIFIED & HEALED',
+    textColor: 'text-tertiary',
+    bgColor: 'bg-tertiary/15',
+    borderColor: 'border-tertiary/30',
   },
   completed: {
-    dotClass: 'pulse-emerald',
-    label: 'Completed',
-    textColor: 'text-success-light',
-    bgColor: 'bg-success/10',
-    borderColor: 'border-success/30',
+    dotClass: 'pulse-sage',
+    label: 'COMPLETED',
+    textColor: 'text-tertiary',
+    bgColor: 'bg-tertiary/15',
+    borderColor: 'border-tertiary/30',
   },
   pr_created: {
-    dotClass: 'pulse-indigo',
-    label: 'PR Created',
-    textColor: 'text-primary-dim',
-    bgColor: 'bg-primary/10',
+    dotClass: 'pulse-teal',
+    label: 'PR CREATED',
+    textColor: 'text-primary',
+    bgColor: 'bg-primary/15',
     borderColor: 'border-primary/30',
   },
   analyzing: {
-    dotClass: 'pulse-purple',
-    label: 'AI Analyzing',
-    textColor: 'text-secondary-dim',
-    bgColor: 'bg-secondary/10',
-    borderColor: 'border-secondary/30',
+    dotClass: 'pulse-teal',
+    label: 'ANALYZING',
+    textColor: 'text-primary',
+    bgColor: 'bg-primary/15',
+    borderColor: 'border-primary/30',
   },
   fix_applied: {
-    dotClass: 'pulse-amber',
-    label: 'Patch Testing',
-    textColor: 'text-warning-light',
-    bgColor: 'bg-warning/10',
-    borderColor: 'border-warning/30',
+    dotClass: 'pulse-coral',
+    label: 'PATCH TESTING',
+    textColor: 'text-secondary',
+    bgColor: 'bg-secondary/15',
+    borderColor: 'border-secondary/30',
   },
   screenshots_captured: {
-    dotClass: 'pulse-purple',
-    label: 'Capturing',
-    textColor: 'text-tertiary-dim',
-    bgColor: 'bg-tertiary/10',
-    borderColor: 'border-tertiary/30',
+    dotClass: 'pulse-teal',
+    label: 'CAPTURED',
+    textColor: 'text-primary',
+    bgColor: 'bg-primary/15',
+    borderColor: 'border-primary/30',
   },
   pending: {
-    dotClass: 'pulse-amber',
-    label: 'Pending',
-    textColor: 'text-warning-light',
-    bgColor: 'bg-warning/10',
-    borderColor: 'border-warning/30',
+    dotClass: 'pulse-coral',
+    label: 'PENDING',
+    textColor: 'text-secondary',
+    bgColor: 'bg-secondary/15',
+    borderColor: 'border-secondary/30',
   },
   failed: {
-    dotClass: 'pulse-rose',
-    label: 'Failed',
-    textColor: 'text-error-light',
-    bgColor: 'bg-error/10',
+    dotClass: 'pulse-red',
+    label: 'FAILED',
+    textColor: 'text-error',
+    bgColor: 'bg-error/15',
     borderColor: 'border-error/30',
   },
   approved: {
-    dotClass: 'pulse-emerald',
-    label: 'Approved',
-    textColor: 'text-success-light',
-    bgColor: 'bg-success/10',
-    borderColor: 'border-success/30',
+    dotClass: 'pulse-sage',
+    label: 'APPROVED',
+    textColor: 'text-tertiary',
+    bgColor: 'bg-tertiary/15',
+    borderColor: 'border-tertiary/30',
   },
   rejected: {
-    dotClass: 'pulse-rose',
-    label: 'Rejected',
-    textColor: 'text-error-light',
-    bgColor: 'bg-error/10',
+    dotClass: 'pulse-red',
+    label: 'REJECTED',
+    textColor: 'text-error',
+    bgColor: 'bg-error/15',
     borderColor: 'border-error/30',
   },
 };
@@ -78,12 +78,10 @@ export const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${config.bgColor} border ${config.borderColor} ${config.textColor}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${config.bgColor} border ${config.borderColor} ${config.textColor} text-label-caps tracking-wider font-bold`}
     >
       <span className={`status-dot ${config.dotClass}`} />
-      <span className="text-label-caps font-bold uppercase tracking-wider">
-        {config.label}
-      </span>
+      <span>{config.label}</span>
     </span>
   );
 };
