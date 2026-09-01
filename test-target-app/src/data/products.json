@@ -1,34 +1,66 @@
 [
   {
     "id": "prod-1",
-    "name": "Artisan Ceramic Mug",
-    "price": 24.00,
-    "imageUrl": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
-    "description": "Hand-thrown ceramic mug with a soft matte finish. Perfect for your morning ritual.",
-    "tag": "New Arrival"
+    "name": "Oversized Heavyweight Hoodie",
+    "price": 2499,
+    "imageUrl": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80",
+    "description": "450 GSM organic French terry cotton with dropped shoulders and double-lined hood.",
+    "tag": "Best Seller"
   },
   {
     "id": "prod-2",
-    "name": "Linen Bound Journal",
-    "price": 18.00,
-    "imageUrl": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80",
-    "description": "Premium 120gsm paper bound in textured linen. Lays perfectly flat.",
-    "tag": ""
+    "name": "Relaxed Linen Trousers",
+    "price": 1899,
+    "imageUrl": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&auto=format&fit=crop&q=80",
+    "description": "Breathable 100% European flax linen with an elasticated drawstring waistband.",
+    "tag": "New Arrival"
   },
   {
     "id": "prod-3",
-    "name": "Minimalist Desk Lamp",
-    "price": 85.00,
-    "imageUrl": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop&q=80",
-    "description": "Adjustable brass lighting fixture with a soft, diffused glow for focused work.",
+    "name": "Vintage Washed Denim Jacket",
+    "price": 3499,
+    "imageUrl": "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80",
+    "description": "14oz selvedge cotton denim with antique brass hardware and a classic relaxed silhouette.",
     "tag": ""
   },
   {
     "id": "prod-4",
+    "name": "Minimalist Crewneck Sweater",
+    "price": 2199,
+    "imageUrl": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&auto=format&fit=crop&q=80",
+    "description": "Extra-fine merino wool blend with ribbed collar and cuffs for everyday clean layering.",
+    "tag": ""
+  },
+  {
+    "id": "prod-5",
+    "name": "Classic Boxy Heavyweight Tee",
+    "price": 899,
+    "imageUrl": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80",
+    "description": "240 GSM combed cotton with a structured boxy fit and durable reinforced neckline.",
+    "tag": "Essential"
+  },
+  {
+    "id": "prod-6",
+    "name": "Artisan Ceramic Mug",
+    "price": 649,
+    "imageUrl": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
+    "description": "Hand-thrown ceramic mug with a soft matte finish. Perfect for your morning ritual.",
+    "tag": ""
+  },
+  {
+    "id": "prod-7",
+    "name": "Minimalist Desk Lamp",
+    "price": 2799,
+    "imageUrl": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop&q=80",
+    "description": "Adjustable brass lighting fixture with a soft, diffused warm glow for focused work.",
+    "tag": ""
+  },
+  {
+    "id": "prod-8",
     "name": "Precision Pour-Over Set",
-    "price": 120.00,
+    "price": 3299,
     "imageUrl": "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600&auto=format&fit=crop&q=80",
-    "description": "Elevate your brewing experience with this beautifully engineered pour-over set. Includes heat-resistant glass carafe and a precision metal dripper designed for optimal extraction flow.",
+    "description": "Elevate your brewing experience with heat-resistant borosilicate glass carafe and precision metal dripper designed for optimal extraction.",
     "tag": "Staff Pick",
     "isFeatured": true
   }

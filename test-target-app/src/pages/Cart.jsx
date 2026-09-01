@@ -7,23 +7,23 @@ export const Cart = () => {
   const { cart, updateQuantity, removeFromCart, cartTotal } = useCart();
   const navigate = useNavigate();
 
-  // Mock initial demo items matching Screenshot 5 if cart is empty
+  // Mock initial demo items matching store inventory if cart is empty
   const displayItems = cart.length > 0 ? cart : [
     {
       id: 'demo-1',
-      name: 'Artisan Ceramic Dripper',
-      variant: 'Matte White',
-      price: 45.00,
+      name: 'Oversized Heavyweight Hoodie',
+      variant: 'Oatmeal Heather · L',
+      price: 2499,
       quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=400&auto=format&fit=crop&q=80'
     },
     {
       id: 'demo-2',
-      name: 'Precision Gooseneck Kettle',
-      variant: 'Matte Black • 1L',
-      price: 89.00,
+      name: 'Relaxed Linen Trousers',
+      variant: 'Natural Beige · 32',
+      price: 1899,
       quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&auto=format&fit=crop&q=80'
     }
   ];
 
@@ -63,7 +63,7 @@ export const Cart = () => {
                     {item.variant || 'Standard'}
                   </p>
                   <p className="text-sm font-extrabold text-[#1d1b17] mt-2 sm:hidden">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toLocaleString('en-IN')}
                   </p>
                 </div>
               </div>
@@ -71,7 +71,7 @@ export const Cart = () => {
               <div className="flex items-center justify-between sm:justify-end gap-6 pt-3 sm:pt-0 border-t sm:border-0 border-[#f3ede6]">
                 <div className="text-right hidden sm:block">
                   <span className="font-extrabold text-[#1d1b17] text-base">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toLocaleString('en-IN')}
                   </span>
                 </div>
 
@@ -107,7 +107,7 @@ export const Cart = () => {
           ))}
         </div>
 
-        {/* Right Column: Order Summary (Screenshot 5) */}
+        {/* Right Column: Order Summary */}
         <div className="lg:col-span-4">
           <div className="bg-white rounded-2xl border border-[#E8E6E1] p-6 shadow-[0_4px_20px_-2px_rgba(26,26,26,0.05)] space-y-5">
             <h2 className="text-lg font-bold text-[#1d1b17]">
@@ -117,21 +117,21 @@ export const Cart = () => {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-[#6f7979]">
                 <span>Subtotal</span>
-                <span className="font-bold text-[#1d1b17]">${total.toFixed(2)}</span>
+                <span className="font-bold text-[#1d1b17]">₹{total.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#6f7979]">
                 <span>Shipping</span>
                 <span>Calculated at checkout</span>
               </div>
               <div className="flex justify-between text-[#6f7979]">
-                <span>Taxes</span>
+                <span>Taxes (GST included)</span>
                 <span>Calculated at checkout</span>
               </div>
             </div>
 
             <div className="pt-4 border-t border-[#E8E6E1] flex justify-between items-baseline">
               <span className="text-sm font-bold text-[#1d1b17]">Estimated Total</span>
-              <span className="text-xl font-extrabold text-[#1d1b17]">${total.toFixed(2)}</span>
+              <span className="text-xl font-extrabold text-[#1d1b17]">₹{total.toLocaleString('en-IN')}</span>
             </div>
 
             <button

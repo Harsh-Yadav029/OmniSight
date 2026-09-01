@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, Heart, User } from 'lucide-react';
+import { ShoppingBag, Search, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export const Navbar = () => {
@@ -10,7 +10,7 @@ export const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#FAFAF8] border-b border-[#E8E6E1] font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        {/* Left: Brand + Nav links */}
+        {/* Left: Brand + Shop link */}
         <div className="flex items-center gap-8">
           <Link
             to="/"
@@ -32,18 +32,12 @@ export const Navbar = () => {
             >
               Shop
             </Link>
-            <a href="#" className="hover:text-[#1d1b17] transition">
-              Categories
-            </a>
-            <a href="#" className="hover:text-[#1d1b17] transition">
-              Deals
-            </a>
           </nav>
         </div>
 
         {/* Right side: Search, Sign In, Heart, Cart */}
         <div className="flex items-center gap-4">
-          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition">
+          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition" title="Search">
             <Search className="w-5 h-5" />
           </button>
 
@@ -51,7 +45,7 @@ export const Navbar = () => {
             Sign In
           </button>
 
-          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition">
+          <button className="p-1.5 text-[#3f4948] hover:text-[#1d1b17] transition" title="Favorites">
             <Heart className="w-5 h-5" />
           </button>
 
@@ -61,12 +55,14 @@ export const Navbar = () => {
             id="nav-cart-btn"
           >
             <ShoppingBag className="w-5 h-5" />
-            <span
-              id="cart-badge-count"
-              className="absolute -top-1 -right-1 bg-[#904c1b] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm"
-            >
-              {totalItems || 3}
-            </span>
+            {totalItems > 0 && (
+              <span
+                id="cart-badge-count"
+                className="absolute -top-1 -right-1 bg-[#904c1b] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm"
+              >
+                {totalItems}
+              </span>
+            )}
           </Link>
         </div>
       </div>

@@ -31,7 +31,7 @@ export const ProductCard = ({ product }) => {
 
         <div className="mt-4 pt-3 border-t border-[#E8E6E1] flex items-center justify-between">
           <span className="text-lg font-extrabold text-[#1d1b17]">
-            ${product.price.toFixed(2)}
+            ₹{product.price.toLocaleString('en-IN')}
           </span>
           <button
             onClick={() => addToCart(product)}

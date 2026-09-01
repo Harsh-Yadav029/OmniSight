@@ -7,19 +7,24 @@ export const ProductListing = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { addToCart } = useCart();
 
-  const gridProducts = productsData.filter((p) => !p.isFeatured);
-  const featuredProduct = productsData.find((p) => p.isFeatured);
+  const filtered = productsData.filter((p) =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const gridProducts = filtered.filter((p) => !p.isFeatured);
+  const featuredProduct = filtered.find((p) => p.isFeatured);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 font-sans space-y-10" id="product-listing-page">
       {/* Header with Search */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#1d1b17] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1d1b17] tracking-tight">
             Curated Essentials
           </h1>
           <p className="text-sm text-[#6f7979] mt-1.5 max-w-xl font-medium">
-            Discover our latest collection of thoughtfully designed products. Simple, functional, and beautiful.
+            Discover our latest collection of thoughtfully crafted apparel and everyday goods. Simple, functional, and durable.
           </p>
         </div>
 
@@ -60,14 +65,14 @@ export const ProductListing = () => {
             <div className="space-y-3 flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-bold text-[#1d1b17] text-base">
+                  <h3 className="font-bold text-[#1d1b17] text-base leading-snug">
                     {product.name}
                   </h3>
-                  <span className="font-extrabold text-[#1d1b17] text-lg">
-                    ${product.price.toFixed(0)}
+                  <span className="font-extrabold text-[#1d1b17] text-base shrink-0">
+                    ₹{product.price.toLocaleString('en-IN')}
                   </span>
                 </div>
-                <p className="text-xs text-[#6f7979] mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#6f7979] mt-1.5 leading-relaxed line-clamp-2">
                   {product.description}
                 </p>
               </div>
@@ -89,7 +94,7 @@ export const ProductListing = () => {
         ))}
       </div>
 
-      {/* Featured Wide Banner Card (Staff Pick from Screenshot 4) */}
+      {/* Featured Wide Banner Card */}
       {featuredProduct && (
         <div className="bg-white rounded-2xl border border-[#E8E6E1] p-6 sm:p-8 shadow-[0_4px_20px_-2px_rgba(26,26,26,0.05)] grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-[#f9f3eb]">
@@ -111,7 +116,7 @@ export const ProductListing = () => {
                 {featuredProduct.name}
               </h2>
               <span className="text-2xl font-extrabold text-[#1d1b17]">
-                ${featuredProduct.price.toFixed(0)}
+                ₹{featuredProduct.price.toLocaleString('en-IN')}
               </span>
             </div>
 
@@ -137,7 +142,7 @@ export const ProductListing = () => {
 
       {/* Footer */}
       <footer className="pt-10 border-t border-[#E8E6E1] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#6f7979] font-mono">
-        <p>© 2024 TinyCart</p>
+        <p>© 2026 TinyCart</p>
         <div className="flex items-center gap-6">
           <a href="#" className="hover:text-[#1d1b17] transition">Terms</a>
           <a href="#" className="hover:text-[#1d1b17] transition">Privacy</a>
