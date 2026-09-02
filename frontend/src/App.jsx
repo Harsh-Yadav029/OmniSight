@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
+import { DemoPage } from './pages/DemoPage';
 import { Login } from './pages/Login';
 import { RunsList } from './pages/RunsList';
 import { RunDetail } from './pages/RunDetail';
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/platform" element={<LandingPage />} />
             <Route path="/features" element={<FeaturesPage />} />
             <Route path="/integrations" element={<IntegrationsPage />} />
+            <Route path="/demo" element={<DemoPage />} />
             <Route path="/login" element={<Login />} />
 
             {/* Authenticated QA Dashboard Routes */}

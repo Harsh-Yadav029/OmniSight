@@ -54,10 +54,10 @@ export const PublicNav = () => {
             Sign In
           </Link>
           <Link
-            to={isAuthenticated ? '/app' : '/login'}
+            to={isAuthenticated ? '/app' : '/demo'}
             className="px-5 py-2.5 bg-[#016464] hover:bg-[#004f50] text-white text-sm font-bold rounded-xl shadow-sm hover:shadow transition-all active:scale-[0.98]"
           >
-            {isAuthenticated ? 'Launch App' : 'Get Started'}
+            {isAuthenticated ? 'Dashboard' : 'Launch Demo'}
           </Link>
         </div>
       </div>

@@ -27,10 +27,10 @@ export const LandingPage = () => {
         {/* Hero Actions */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to={isAuthenticated ? '/app' : '/login'}
+            to={isAuthenticated ? '/app' : '/demo'}
             className="w-full sm:w-auto px-7 py-3.5 bg-[#016464] hover:bg-[#004f50] text-white font-bold text-base rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
           >
-            {isAuthenticated ? 'Launch App' : 'Get Started'}
+            {isAuthenticated ? 'Open Dashboard' : 'Launch Demo'}
           </Link>
           <a
             href="#bento-grid"
