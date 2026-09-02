@@ -44,16 +44,6 @@ export const Sidebar = () => {
           </span>
           <span>Runs</span>
         </Link>
-
-        <Link
-          to="/settings"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#3f4948] hover:bg-[#ede7e0] hover:text-[#1d1b17] transition-all"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            settings
-          </span>
-          <span>Settings</span>
-        </Link>
       </div>
 
       {/* User Session & Logout */}
