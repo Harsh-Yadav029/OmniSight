@@ -208,21 +208,17 @@ async def handle_build_event(payload: BuildEventPayload, background_tasks: Backg
                 }
             )
 
-            if res.status_code >= 400:
-                print(f"[Webhook Gateway] Backend responded with error: {res.status_code} - {res.text}")
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"Backend rejected run creation: {res.text}"
-                )
-
-            data = res.json().get("data", {})
-            run_id = data.get("runId") or (data.get("run", {}).get("_id"))
-    except httpx.RequestError as exc:
-        print(f"[Webhook Gateway] Notice: Backend connection ({exc}). Using offline run_id fallback.")
-        run_id = f"local-run-{payload.commit_sha[:7]}"
+            if res.status_code in [200, 201]:
+                data = res.json().get("data", {})
+                run_id = data.get("runId") or (data.get("run", {}).get("_id"))
+            else:
+                print(f"[Webhook Gateway] Backend responded with status {res.status_code}. Using fallback run ID.")
+    except Exception as exc:
+        print(f"[Webhook Gateway] Notice: Backend connection error ({exc}). Using offline run_id fallback.")
 
     if not run_id:
-        run_id = f"run-{payload.commit_sha[:7]}"
+        import time
+        run_id = f"run-{payload.commit_sha[:7]}-{int(time.time())}"
 
     # 2. Queue autonomous testing task
     background_tasks.add_task(

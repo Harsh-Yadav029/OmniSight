@@ -84,8 +84,21 @@ export const api = {
         targetUrl: targetUrl ? targetUrl.trim() : undefined
       })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || data.error || 'Failed to trigger audit');
+
+    let data = {};
+    const text = await res.text();
+    try {
+      data = JSON.parse(text);
+    } catch {
+      if (!res.ok) {
+        throw new Error(`Service is waking up (HTTP ${res.status}). Please retry in 10 seconds.`);
+      }
+    }
+
+    if (!res.ok) {
+      const errorMsg = typeof data.detail === 'string' ? data.detail : data.error || `Server responded with status ${res.status}`;
+      throw new Error(errorMsg);
+    }
     return data;
   }
 };
