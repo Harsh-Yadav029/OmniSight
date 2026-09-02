@@ -80,22 +80,20 @@ export const Login = () => {
             <button
               type="button"
               onClick={() => { setAuthMode('login'); setError(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${
-                authMode === 'login'
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${authMode === 'login'
                   ? 'bg-white text-[#016464] shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => { setAuthMode('register'); setError(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${
-                authMode === 'register'
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${authMode === 'register'
                   ? 'bg-white text-[#016464] shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               Register New Account
             </button>
@@ -123,7 +121,7 @@ export const Login = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Alex Morgan"
+                    placeholder="Enter your full name"
                     className="w-full px-4 py-2.5 bg-slate-50 border border-[#E8E6E1] rounded-xl text-sm text-[#1d1b17] placeholder-[#bec9c8] focus:outline-none focus:border-[#016464] focus:ring-2 focus:ring-[#016464]/10 transition"
                   />
                 </div>
