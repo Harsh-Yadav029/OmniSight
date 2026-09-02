@@ -46,9 +46,10 @@ TEST_TARGET_APP_URL = (os.getenv("TEST_TARGET_APP_URL") or os.getenv("MOCK_APP_U
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY") or "default_internal_key"
 
 class BuildEventPayload(BaseModel):
-    repo: str
-    branch: str
-    commit_sha: str = Field(..., alias="commitSha")
+    repo: str = "Harsh-Yadav029/OmniSight"
+    branch: str = "main"
+    commit_sha: str = Field(default_factory=lambda: "manual-audit", alias="commitSha")
+    target_url: Optional[str] = Field(default=None, alias="targetUrl")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -186,9 +187,9 @@ async def handle_build_event(payload: BuildEventPayload, background_tasks: Backg
     """
     backend_url = BACKEND_URL
     internal_key = INTERNAL_API_KEY
-    target_app_url = TEST_TARGET_APP_URL
+    target_app_url = payload.target_url or TEST_TARGET_APP_URL
 
-    print(f"[Webhook Gateway] Received build event for {payload.repo} @ {payload.branch} ({payload.commit_sha})")
+    print(f"[Webhook Gateway] Received build event for {payload.repo} @ {payload.branch} ({payload.commit_sha}) targeting {target_app_url}")
 
     # 1. Register BuildRun in Backend
     run_id = None

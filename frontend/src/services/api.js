@@ -73,17 +73,19 @@ export const api = {
   },
 
   // Trigger New Autonomous Run via ML Service Webhook
-  async triggerNewRun() {
+  async triggerNewRun({ targetUrl, repo, branch } = {}) {
     const res = await fetch(`${ML_SERVICE_URL}/webhook/build-event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        repo: 'Harsh-Yadav029/OmniSight',
-        branch: 'main',
-        commitSha: Math.random().toString(36).substring(2, 9)
+        repo: repo || 'Harsh-Yadav029/OmniSight',
+        branch: branch || 'main',
+        commitSha: Math.random().toString(36).substring(2, 9),
+        targetUrl: targetUrl ? targetUrl.trim() : undefined
       })
     });
     const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error || 'Failed to trigger audit');
     return data;
   }
 };

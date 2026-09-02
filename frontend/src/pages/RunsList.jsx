@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
+import { NewRunModal } from '../components/NewRunModal';
 
 const getRunIcon = (status) => {
   if (status === 'analyzing' || status === 'pending') return { icon: 'analytics', bg: 'bg-[#e5ffe9] text-[#016464]' };
@@ -48,6 +49,7 @@ const formatTimeAgo = (dateString) => {
 
 export const RunsList = () => {
   const [triggering, setTriggering] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: runs = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['runs'],
@@ -60,19 +62,29 @@ export const RunsList = () => {
     }
   });
 
-  const handleTriggerRun = async () => {
+  const handleTriggerRun = async (params) => {
     setTriggering(true);
     try {
-      await api.triggerNewRun();
+      await api.triggerNewRun(params);
       setTimeout(() => { refetch(); setTriggering(false); }, 1500);
     } catch (e) {
       console.error('Trigger run error:', e);
-      refetch(); setTriggering(false);
+      refetch();
+      setTriggering(false);
+      throw e;
     }
   };
 
   return (
     <div className="p-8 md:p-12 max-w-5xl mx-auto w-full font-sans">
+      {/* Start New Audit Modal */}
+      <NewRunModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTrigger={handleTriggerRun}
+        isTriggering={triggering}
+      />
+
       {/* Page Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
         <div>
@@ -85,14 +97,14 @@ export const RunsList = () => {
         </div>
 
         <button
-          onClick={handleTriggerRun}
+          onClick={() => setIsModalOpen(true)}
           disabled={triggering}
           className="bg-[#016464] hover:bg-[#004f50] text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-[0.98] disabled:opacity-50 shrink-0"
         >
           <span className="material-symbols-outlined text-[18px]">
-            {triggering ? 'sync' : 'play_arrow'}
+            {triggering ? 'sync' : 'add_circle'}
           </span>
-          <span>{triggering ? 'Triggering...' : 'New Run'}</span>
+          <span>{triggering ? 'Auditing...' : 'New Run'}</span>
         </button>
       </header>
 
