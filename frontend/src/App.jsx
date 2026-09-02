@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
+import { LandingPage } from './pages/LandingPage';
+import { FeaturesPage } from './pages/FeaturesPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
 import { Login } from './pages/Login';
 import { RunsList } from './pages/RunsList';
 import { RunDetail } from './pages/RunDetail';
@@ -55,9 +58,24 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
+            {/* Public Landing, Feature & Integration Pages */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/platform" element={<LandingPage />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="/login" element={<Login />} />
+
+            {/* Authenticated QA Dashboard Routes */}
             <Route
-              path="/"
+              path="/app"
+              element={
+                <ProtectedRoute>
+                  <RunsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/runs"
               element={
                 <ProtectedRoute>
                   <RunsList />
@@ -72,6 +90,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

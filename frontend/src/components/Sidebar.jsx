@@ -16,7 +16,7 @@ export const Sidebar = () => {
     <aside className="hidden md:flex flex-col h-screen py-6 w-64 bg-[#f9f3eb] border-r border-[#E8E6E1] shrink-0 font-sans select-none">
       {/* Brand Header */}
       <div className="px-6 pb-6 border-b border-[#E8E6E1] mb-4">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/app" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#016464] flex items-center justify-center text-white shadow-sm shrink-0">
             <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
               all_inclusive
@@ -32,9 +32,9 @@ export const Sidebar = () => {
       {/* Navigation Links */}
       <div className="flex-1 px-4 space-y-1.5">
         <Link
-          to="/"
+          to="/app"
           className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-            location.pathname === '/' || location.pathname.startsWith('/runs')
+            location.pathname === '/app' || location.pathname.startsWith('/runs')
               ? 'bg-[#016464] text-white shadow-sm'
               : 'text-[#3f4948] hover:bg-[#ede7e0] hover:text-[#1d1b17]'
           }`}
