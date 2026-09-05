@@ -34,7 +34,14 @@ OmniSight/
 ├── test-target-app/    # "TinyCart" Mock E-Commerce Store (Port 5173)
 │                       # Sample application under test with catalog, cart, and checkout.
 │
-└── scripts/            # End-to-end automated smoke testing suite.
+├── scripts/            # End-to-end automated smoke testing suite.
+│
+├── runs/               # Stored data for test runs, logs, and visual evidence.
+│
+├── docker-compose.yml  # One-click local orchestration for all services.
+├── render.yaml         # Blueprint for deploying Backend and ML Service to Render.
+├── SETUP.md            # Detailed environment configuration guide.
+└── DEPLOYMENT.md       # Comprehensive Render + Vercel deployment guide.
 ```
 
 ---
@@ -86,7 +93,7 @@ jobs:
 
 ## 🔑 What to put in your `.env` files
 
-You can copy `.env.example` in the root (or in each subfolder) to `.env`. Here is what each key does:
+You can copy `.env.example` in the root (or in each subfolder) to `.env`. For an exhaustive guide, please see [`SETUP.md`](SETUP.md). Here is what each key does:
 
 | Environment Variable | Where to get it | What it's used for |
 | :--- | :--- | :--- |
@@ -156,6 +163,14 @@ cd frontend
 npm install
 npm run dev
 ```
+
+---
+
+## 🌍 Deployment to Production (Render & Vercel)
+
+A full cloud deployment strategy uses **Render** for backend/ML and **Vercel** for the frontend and test-target app.
+- See [`DEPLOYMENT.md`](DEPLOYMENT.md) for the step-by-step cloud deployment guide.
+- Check out `render.yaml` for Render Infrastructure-as-Code (IaC) setup.
 
 ---
 
