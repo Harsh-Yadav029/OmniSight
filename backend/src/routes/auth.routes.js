@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   registerUser,
   loginUser,
+  googleLogin,
   getCurrentUser,
 } from '../controllers/auth.controller.js';
 import { authenticateJWT } from '../middlewares/auth.middleware.js';
@@ -23,6 +24,7 @@ const loginValidation = [
 
 router.post('/register', registerValidation, registerUser);
 router.post('/login', loginValidation, loginUser);
+router.post('/google', googleLogin);
 router.get('/me', authenticateJWT, getCurrentUser);
 
 export default router;

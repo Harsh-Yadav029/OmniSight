@@ -45,6 +45,17 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const googleLogin = async (credential) => {
+    const data = await api.googleLogin(credential);
+    const validToken = data.accessToken || data.token;
+    setToken(validToken);
+    setUser(data.user);
+    if (validToken) {
+      localStorage.setItem('omnisight_jwt_token', validToken);
+    }
+    return data.user;
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -52,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, login, googleLogin, logout, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

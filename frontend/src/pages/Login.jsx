@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PublicNav } from '../components/PublicNav';
 import { PublicFooter } from '../components/PublicFooter';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 export const Login = () => {
   const [searchParams] = useSearchParams();
@@ -14,8 +15,10 @@ export const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
   useEffect(() => {
     if (searchParams.get('tab') === 'register') {
@@ -52,9 +55,23 @@ export const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    try {
+      await googleLogin(credentialResponse.credential);
+      navigate('/app');
+    } catch (err) {
+      setError(err.message || 'Google Login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#016464] selection:text-white">
-      <PublicNav />
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <div className="min-h-screen flex flex-col bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#016464] selection:text-white">
+        <PublicNav />
 
       <main className="flex-1 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Soft radial ambient background gradients */}
@@ -183,6 +200,30 @@ export const Login = () => {
               </button>
             </form>
 
+            {/* Divider */}
+            <div className="mt-6 flex items-center justify-center space-x-2">
+              <span className="h-px bg-slate-200 w-full"></span>
+              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Or</span>
+              <span className="h-px bg-slate-200 w-full"></span>
+            </div>
+
+            {/* Google Login */}
+            <div className="mt-6 flex justify-center w-full rounded-xl overflow-hidden bg-white shadow-sm border border-[#E8E6E1] hover:shadow transition group">
+              <div className="w-full scale-[1.02] transform origin-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google Login was unsuccessful.')}
+                  useOneTap
+                  theme="outline"
+                  size="large"
+                  text={authMode === 'login' ? 'signin_with' : 'signup_with'}
+                  shape="rectangular"
+                  width="400"
+                  logo_alignment="center"
+                />
+              </div>
+            </div>
+
             {/* Link to Dedicated Demo Page */}
             <div className="pt-4 mt-5 border-t border-slate-100 text-center">
               <p className="text-xs text-slate-500 font-medium">
@@ -194,9 +235,10 @@ export const Login = () => {
             </div>
           </div>
         </div>
-      </main>
+        </main>
 
-      <PublicFooter />
-    </div>
+        <PublicFooter />
+      </div>
+    </GoogleOAuthProvider>
   );
 };

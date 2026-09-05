@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/user.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
@@ -144,6 +145,103 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
 
     throw new ApiError(503, 'Database is offline and provided credentials do not match demo presets');
+  }
+});
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    throw new ApiError(400, 'Google credential token is missing');
+  }
+
+  // Verify token
+  let ticket;
+  try {
+    ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+  } catch (error) {
+    throw new ApiError(401, 'Invalid Google token');
+  }
+
+  const payload = ticket.getPayload();
+  const email = payload.email.toLowerCase().trim();
+  const name = payload.name;
+
+  const isDbConnected = mongoose.connection.readyState === 1;
+
+  if (isDbConnected) {
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Register new user
+      const saltRounds = 10;
+      const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+      const passwordHash = await bcrypt.hash(randomPassword, saltRounds);
+
+      user = await User.create({
+        name,
+        email,
+        passwordHash,
+        role: 'viewer', // default role
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET || 'default_jwt_secret',
+      { expiresIn: '7d' }
+    );
+
+    const loggedInUser = await User.findById(user._id).select('-passwordHash');
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          token,
+          accessToken: token,
+        },
+        'User logged in with Google successfully'
+      )
+    );
+  } else {
+    // Graceful offline fallback
+    const demoUser = {
+      _id: '507f1f77bcf86cd799439013',
+      name: name || 'Google Demo User',
+      email: email,
+      role: 'viewer',
+    };
+
+    const token = jwt.sign(
+      {
+        userId: demoUser._id,
+        role: demoUser.role,
+      },
+      process.env.JWT_SECRET || 'default_jwt_secret',
+      { expiresIn: '7d' }
+    );
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          user: demoUser,
+          token,
+          accessToken: token,
+        },
+        'Logged in with Google using demo mode (DB offline)'
+      )
+    );
   }
 });
 

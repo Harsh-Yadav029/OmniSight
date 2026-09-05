@@ -22,6 +22,17 @@ export const api = {
     return data.data;
   },
 
+  async googleLogin(credential) {
+    const res = await fetch(`${BACKEND_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Google Login failed');
+    return data.data;
+  },
+
   async register(username, email, password, role = 'qa_manager') {
     const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
       method: 'POST',
